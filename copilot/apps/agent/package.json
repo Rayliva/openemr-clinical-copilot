@@ -1,0 +1,45 @@
+{
+  "name": "@copilot/agent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "demo:rag": "tsx scripts/demo-rag.ts",
+    "demo:extract": "tsx scripts/demo-extract.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^1.0.6",
+    "@copilot/ingestion": "workspace:*",
+    "@copilot/metrics": "workspace:*",
+    "@copilot/openemr-client": "workspace:*",
+    "@copilot/rag": "workspace:*",
+    "@copilot/session-token": "workspace:*",
+    "@copilot/snapshot": "workspace:*",
+    "@copilot/tools": "workspace:*",
+    "@copilot/verification": "workspace:*",
+    "@langchain/langgraph": "^0.2.39",
+    "@napi-rs/canvas": "^1.0.2",
+    "ai": "^4.0.18",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.0",
+    "ioredis": "^5.4.2",
+    "langfuse": "^3.29.0",
+    "pdfjs-dist": "^6.1.200",
+    "tesseract.js": "7.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "pino-pretty": "^13.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

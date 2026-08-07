@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Week 2 Architecture Defense — Clinical Co-Pilot</title>
+<style>
+  :root{
+    --bg:#e9eef4; --card:#ffffff; --ink:#16202c; --muted:#5d6a7a; --line:#d3dded;
+    --w1:#2f6fd0; --w1bg:#e7eefb; --w1line:#b9cdf2;
+    --w2:#d6336c; --w2bg:#fbe4ef; --w2line:#f2b8d4;
+    --gate:#6b57d6; --gatebg:#ece9fb; --gateline:#c9bff0;
+    --neu:#eef3f9; --neuline:#cdd8e6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden;
+  }
+  .deck{height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;padding:3vh 3vw}
+  .slide{
+    display:none; width:100%; max-width:1180px; height:100%;
+    background:var(--card); border-radius:22px; box-shadow:0 14px 44px rgba(20,30,50,.14);
+    padding:clamp(24px,3.4vw,52px); flex-direction:column;
+  }
+  .slide.active{display:flex; animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .kicker{font-size:clamp(11px,1.2vw,14px);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--w2)}
+  h1{font-size:clamp(26px,4.2vw,50px);line-height:1.05;letter-spacing:-.02em;margin:.35em 0 .25em}
+  .thesis{font-size:clamp(15px,2.05vw,25px);color:var(--muted);line-height:1.35;max-width:26ch}
+  .slide.wide .thesis{max-width:60ch}
+
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;margin:clamp(10px,2vw,22px) 0}
+  .stage svg{width:100%;height:100%;max-height:60vh}
+
+  .points{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,1.4vw,20px)}
+  .points.two{grid-template-columns:repeat(2,1fr)}
+  .pt{background:var(--neu);border:1px solid var(--neuline);border-radius:14px;padding:clamp(12px,1.3vw,18px)}
+  .pt b{display:block;font-size:clamp(14px,1.5vw,18px);margin-bottom:3px}
+  .pt span{font-size:clamp(12px,1.25vw,15px);color:var(--muted);line-height:1.4}
+  .pt.w2{background:var(--w2bg);border-color:var(--w2line)}
+  .pt.w1{background:var(--w1bg);border-color:var(--w1line)}
+  .pt.gate{background:var(--gatebg);border-color:var(--gateline)}
+
+  /* title slide */
+  .slide.title{align-items:flex-start;justify-content:center}
+  .slide.title h1{font-size:clamp(40px,7vw,88px);margin:.15em 0}
+  .slide.title .sub{font-size:clamp(18px,2.6vw,30px);color:var(--muted);font-weight:500}
+  .slide.title .big-thesis{margin-top:clamp(20px,3vw,40px);font-size:clamp(20px,2.9vw,34px);line-height:1.25;max-width:20ch;font-weight:600}
+  .slide.title .big-thesis .hl{color:var(--w2)}
+  .slide.title .foot{margin-top:auto;font-size:clamp(12px,1.3vw,15px);color:var(--muted)}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chip{font-size:clamp(11px,1.15vw,14px);font-weight:600;border-radius:999px;padding:5px 12px;border:1px solid}
+  .chip.new{color:var(--w2);background:var(--w2bg);border-color:var(--w2line)}
+  .chip.re{color:var(--w1);background:var(--w1bg);border-color:var(--w1line)}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,2vw,28px);flex:1;min-height:0;align-content:center}
+  .panel{background:var(--neu);border:1px solid var(--neuline);border-radius:16px;padding:clamp(16px,1.8vw,24px);display:flex;flex-direction:column}
+  .panel h3{font-size:clamp(17px,2vw,24px);margin-bottom:clamp(8px,1.3vw,16px);display:flex;align-items:center;gap:9px}
+  .panel h3 .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .panel ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .panel li{font-size:clamp(12.5px,1.3vw,16px);color:var(--muted);line-height:1.35;padding-left:18px;position:relative}
+  .panel li::before{content:"";position:absolute;left:0;top:.55em;width:7px;height:7px;border-radius:2px;background:var(--w2)}
+  .panel.w1 li::before{background:var(--w1)}
+  .panel.neu li::before{background:#8a97a7}
+  .panel.neu li{font-size:clamp(12px,1.25vw,15px)}
+  .panel .item{margin-top:clamp(12px,1.9vw,22px)}
+  .panel .item:first-of-type{margin-top:2px}
+  .panel .item h4{font-size:clamp(15.5px,1.8vw,22px);font-weight:700;color:var(--ink);margin-bottom:5px;line-height:1.2}
+  .panel .item p{font-size:clamp(13.5px,1.5vw,18px);color:var(--muted);line-height:1.42}
+  .panel .item p b{color:var(--ink)}
+  .panel code{background:#fff;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:.9em;color:var(--ink)}
+  .tradeoff{margin-top:14px;font-size:clamp(12.5px,1.35vw,16px);color:var(--ink);background:var(--gatebg);border:1px solid var(--gateline);border-radius:12px;padding:12px 16px}
+  .tradeoff b{color:var(--gate)}
+
+  /* chrome */
+  .chrome{position:fixed;bottom:14px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:16px;pointer-events:none}
+  .dots{display:flex;gap:9px;pointer-events:auto}
+  .dots i{width:9px;height:9px;border-radius:50%;background:#b7c3d3;cursor:pointer;transition:.2s}
+  .dots i.on{background:var(--w2);transform:scale(1.25)}
+  .count{position:fixed;top:18px;right:24px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .nav{position:fixed;top:0;height:100vh;width:16vw;cursor:pointer;z-index:2}
+  .nav.l{left:0}.nav.r{right:0}
+  .hint{position:fixed;bottom:14px;right:20px;font-size:11.5px;color:var(--muted);pointer-events:none}
+  .legend{display:flex;gap:16px;font-size:clamp(11px,1.2vw,14px);color:var(--muted);align-items:center}
+  .legend b{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--ink)}
+  .legend .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="deck">
+
+  <!-- SLIDE 1 -->
+  <section class="slide title active">
+    <div class="kicker">Architecture Defense · Week 2</div>
+    <h1>Clinical Co-Pilot</h1>
+    <div class="sub">Multimodal Evidence Agent</div>
+    <div class="big-thesis">Add <span class="hl">eyes</span> and <span class="hl">RAG</span> to a proven safety spine.</div>
+    <div class="foot">A 5-minute overview of the Week&nbsp;2 architecture decisions &amp; why.</div>
+  </section>
+
+  <!-- SLIDE 2 -->
+  <section class="slide wide">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+      <div>
+        <div class="kicker">The shape</div>
+        <h1>One safety spine, two new inputs</h1>
+        <p class="thesis">New capabilities are just new <b>sources of facts</b> — every one passes the same verification gate.</p>
+      </div>
+      <div class="legend">
+        <b><span class="sw" style="background:var(--w1)"></span>Week 1 spine</b>
+        <b><span class="sw" style="background:var(--w2)"></span>Week 2 new</b>
+      </div>
+    </div>
+    <div class="stage">
+      <svg viewBox="0 0 1160 460" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
+        <defs>
+          <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#9aa7b6"/></marker>
+        </defs>
+        <!-- edges -->
+        <g stroke="#9aa7b6" stroke-width="2" fill="none" marker-end="url(#a2)">
+          <path d="M185,230 H210"/>
+          <path d="M370,230 C400,230 400,94 425,94"/>
+          <path d="M370,230 H425"/>
+          <path d="M370,230 C400,230 400,366 425,366"/>
+          <path d="M598,94 C625,94 625,230 650,230"/>
+          <path d="M598,230 H650"/>
+          <path d="M598,366 C625,366 625,230 650,230"/>
+          <path d="M810,230 H830"/>
+          <path d="M1010,230 H1035"/>
+        </g>
+        <!-- Question -->
+        <g><rect x="30" y="192" width="155" height="76" rx="12" fill="var(--neu)" stroke="var(--neuline)"/>
+          <text x="107" y="236" text-anchor="middle" font-size="18.5" font-weight="600" fill="#16202c">Physician question</text></g>
+        <!-- Supervisor -->
+        <g><rect x="210" y="190" width="160" height="80" rx="12" fill="var(--w2bg)" stroke="var(--w2line)"/>
+          <text x="290" y="223" text-anchor="middle" font-size="20" font-weight="700" fill="#d6336c">Supervisor</text>
+          <text x="290" y="247" text-anchor="middle" font-size="15" fill="#5d6a7a">routes the work</text></g>
+        <!-- Workers -->
+        <g><rect x="425" y="55" width="173" height="78" rx="12" fill="var(--w2bg)" stroke="var(--w2line)"/>
+          <text x="511" y="88" text-anchor="middle" font-size="16.5" font-weight="700" fill="#d6336c">Document-extractor</text>
+          <text x="511" y="110" text-anchor="middle" font-size="14" fill="#5d6a7a">documents → VLM</text></g>
+        <g><rect x="425" y="191" width="173" height="78" rx="12" fill="var(--w2bg)" stroke="var(--w2line)"/>
+          <text x="511" y="224" text-anchor="middle" font-size="16.5" font-weight="700" fill="#d6336c">Evidence-retriever</text>
+          <text x="511" y="246" text-anchor="middle" font-size="14" fill="#5d6a7a">guidelines → RAG</text></g>
+        <g><rect x="425" y="327" width="173" height="78" rx="12" fill="var(--w1bg)" stroke="var(--w1line)"/>
+          <text x="511" y="360" text-anchor="middle" font-size="16.5" font-weight="700" fill="#2f6fd0">Safety core</text>
+          <text x="511" y="382" text-anchor="middle" font-size="13.5" fill="#5d6a7a">chart → FHIR · always on</text></g>
+        <!-- Generate -->
+        <g><rect x="650" y="192" width="160" height="76" rx="12" fill="var(--neu)" stroke="var(--neuline)"/>
+          <text x="730" y="236" text-anchor="middle" font-size="18.5" font-weight="600" fill="#16202c">Generate answer</text></g>
+        <!-- Gate -->
+        <g><rect x="830" y="150" width="180" height="160" rx="14" fill="var(--w1bg)" stroke="var(--w1line)"/>
+          <text x="920" y="192" text-anchor="middle" font-size="19" font-weight="700" fill="#2f6fd0">Verification gate</text>
+          <text x="920" y="222" text-anchor="middle" font-size="14" fill="#5d6a7a">citation check</text>
+          <text x="920" y="244" text-anchor="middle" font-size="14" fill="#5d6a7a">grounding judge</text>
+          <text x="920" y="266" text-anchor="middle" font-size="14" fill="#5d6a7a">constraint engine</text></g>
+        <!-- Answer -->
+        <g><rect x="1035" y="192" width="120" height="76" rx="12" fill="var(--w1bg)" stroke="var(--w1line)"/>
+          <text x="1095" y="224" text-anchor="middle" font-size="17" font-weight="700" fill="#2f6fd0">Grounded</text>
+          <text x="1095" y="246" text-anchor="middle" font-size="17" font-weight="700" fill="#2f6fd0">answer</text></g>
+      </svg>
+    </div>
+    <div class="points two">
+      <div class="pt"><b>Supervisor routes</b><span>Decides extract vs. retrieve vs. answer.</span></div>
+      <div class="pt"><b>Nothing skips the gate</b><span>Every handoff is a traced Langfuse span.</span></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 -->
+  <section class="slide wide">
+    <div class="kicker">Hard problem #1 · Vision</div>
+    <h1>Seeing without inventing</h1>
+    <p class="thesis">A VLM can read a scan — and hallucinate. The <b>schema is the gatekeeper</b>, and every field must point back to the page.</p>
+    <div class="stage">
+      <svg viewBox="0 0 1100 240" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
+        <defs><marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#9aa7b6"/></marker></defs>
+        <g stroke="#9aa7b6" stroke-width="2" fill="none" marker-end="url(#a3)">
+          <path d="M215,120 H250"/><path d="M505,120 H540"/><path d="M775,120 H810"/>
+        </g>
+        <g><rect x="30" y="50" width="185" height="140" rx="12" fill="var(--neu)" stroke="var(--neuline)"/>
+          <text x="122" y="114" text-anchor="middle" font-size="18" font-weight="600" fill="#16202c">Scanned lab PDF</text>
+          <text x="122" y="138" text-anchor="middle" font-size="18" font-weight="600" fill="#16202c">or intake form</text></g>
+        <g><rect x="250" y="50" width="255" height="140" rx="12" fill="var(--w2bg)" stroke="var(--w2line)"/>
+          <text x="377" y="106" text-anchor="middle" font-size="18" font-weight="700" fill="#d6336c">Claude VLM + Tesseract</text>
+          <text x="377" y="132" text-anchor="middle" font-size="15" fill="#5d6a7a">VLM reads · OCR locates</text>
+          <text x="377" y="153" text-anchor="middle" font-size="15" fill="#5d6a7a">self-hosted, in-boundary</text></g>
+        <g><rect x="540" y="50" width="235" height="140" rx="12" fill="var(--w1bg)" stroke="var(--w1line)"/>
+          <text x="657" y="106" text-anchor="middle" font-size="19" font-weight="700" fill="#2f6fd0">Strict Zod schema</text>
+          <text x="657" y="132" text-anchor="middle" font-size="15" fill="#5d6a7a">canonical contract</text>
+          <text x="657" y="153" text-anchor="middle" font-size="15" fill="#5d6a7a">raw output can't pass</text></g>
+        <g><rect x="810" y="50" width="280" height="140" rx="12" fill="var(--w1bg)" stroke="var(--w1line)"/>
+          <text x="950" y="106" text-anchor="middle" font-size="19" font-weight="700" fill="#2f6fd0">Cited facts → chart</text>
+          <text x="950" y="132" text-anchor="middle" font-size="15" fill="#5d6a7a">bounding box +</text>
+          <text x="950" y="153" text-anchor="middle" font-size="15" fill="#5d6a7a">FHIR derivedFrom</text></g>
+      </svg>
+    </div>
+    <div class="points">
+      <div class="pt"><b>VLM reads, OCR locates</b><span>Claude extracts the facts; self-hosted Tesseract pins each to a box on the page.</span></div>
+      <div class="pt"><b>Schema = contract</b><span>Hallucination blocked before it's a fact.</span></div>
+      <div class="pt"><b>Cited to the page</b><span>Overlay draws the box each value came from.</span></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 -->
+  <section class="slide wide">
+    <div class="kicker">Hard problem #2 · Evidence</div>
+    <h1>Basic hybrid RAG</h1>
+    <p class="thesis">For guideline advice, <b>fetch the evidence first</b>, then answer only from it — a different retrieval problem than the chart.</p>
+    <div class="stage">
+      <svg viewBox="0 0 1060 220" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
+        <defs><marker id="a4" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#9aa7b6"/></marker></defs>
+        <g stroke="#9aa7b6" stroke-width="2" fill="none" marker-end="url(#a4)">
+          <path d="M180,110 H205"/><path d="M395,110 H420"/><path d="M655,110 H680"/><path d="M870,110 H895"/>
+        </g>
+        <g>
+          <g><rect x="25" y="40" width="155" height="140" rx="12" fill="var(--neu)" stroke="var(--neuline)"/>
+            <text x="102" y="103" text-anchor="middle" font-size="18" font-weight="700" fill="#16202c">Guideline</text>
+            <text x="102" y="126" text-anchor="middle" font-size="18" font-weight="700" fill="#16202c">corpus</text></g>
+          <g><rect x="205" y="40" width="190" height="140" rx="12" fill="var(--w2bg)" stroke="var(--w2line)"/>
+            <text x="300" y="96" text-anchor="middle" font-size="18" font-weight="700" fill="#d6336c">chunk + embed</text>
+            <text x="300" y="122" text-anchor="middle" font-size="14.5" font-weight="500" fill="#5d6a7a">each chunk → Cohere</text>
+            <text x="300" y="142" text-anchor="middle" font-size="14.5" font-weight="500" fill="#5d6a7a">embed v3</text></g>
+          <g><rect x="420" y="40" width="235" height="140" rx="12" fill="var(--w2bg)" stroke="var(--w2line)"/>
+            <text x="537" y="90" text-anchor="middle" font-size="18" font-weight="700" fill="#d6336c">hybrid retrieve</text>
+            <text x="537" y="116" text-anchor="middle" font-size="14.5" font-weight="500" fill="#5d6a7a">pgvector (meaning)</text>
+            <text x="537" y="136" text-anchor="middle" font-size="14.5" font-weight="500" fill="#5d6a7a">+ keyword (exact terms)</text></g>
+          <g><rect x="680" y="40" width="190" height="140" rx="12" fill="var(--w2bg)" stroke="var(--w2line)"/>
+            <text x="775" y="96" text-anchor="middle" font-size="18" font-weight="700" fill="#d6336c">Cohere rerank</text>
+            <text x="775" y="122" text-anchor="middle" font-size="14.5" font-weight="500" fill="#5d6a7a">re-scores top hits</text>
+            <text x="775" y="142" text-anchor="middle" font-size="14.5" font-weight="500" fill="#5d6a7a">by true relevance</text></g>
+          <g><rect x="895" y="40" width="150" height="140" rx="12" fill="var(--w1bg)" stroke="var(--w1line)"/>
+            <text x="970" y="103" text-anchor="middle" font-size="17" font-weight="700" fill="#2f6fd0">Top evidence,</text>
+            <text x="970" y="126" text-anchor="middle" font-size="17" font-weight="700" fill="#2f6fd0">cited</text></g>
+        </g>
+      </svg>
+    </div>
+    <div class="points">
+      <div class="pt"><b>Hybrid = meaning + exact</b><span>Embeddings catch concepts; keyword catches drug names &amp; codes.</span></div>
+      <div class="pt"><b>One store: pgvector</b><span>Postgres is already in our stack — vectors + keyword in one agent-owned DB.</span></div>
+      <div class="pt"><b>Rerank before trusting</b><span>Cohere re-scores the top ~20 down to the best few.</span></div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5 -->
+  <section class="slide wide">
+    <div class="kicker">Discussion</div>
+    <h1>Trade-offs &amp; open questions</h1>
+    <div class="cols">
+      <div class="panel neu">
+        <h3>Known trade-offs</h3>
+        <div class="item">
+          <h4>Hosted embed / rerank (Cohere)</h4>
+          <p>The physician's query can <b>leave our trust boundary</b>. The corpus isn't PHI, but a query may carry patient specifics — the same concern behind <b>self-hosting Langfuse</b>. Self-host the reranker for zero egress.</p>
+        </div>
+        <div class="item">
+          <h4>Writes go through the OpenEMR module</h4>
+          <p>We save to the chart the <b>source document</b> plus the <b>facts extracted from it</b> (e.g. lab values as FHIR Observations), each linked to its source. Routing writes through the module — not the sidecar — keeps integrity &amp; audit.</p>
+        </div>
+      </div>
+      <div class="panel neu">
+        <h3>Open questions</h3>
+        <div class="item">
+          <h4>Guideline corpus</h4>
+          <p>Which sources do we use, and how do we keep them current &amp; versioned?</p>
+        </div>
+        <div class="item">
+          <h4>Latency</h4>
+          <p>Can VLM + RAG + multi-agent stay under an acceptable p95?</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="count" id="count">1 / 5</div>
+<div class="nav l" id="navL" title="Previous"></div>
+<div class="nav r" id="navR" title="Next"></div>
+<div class="chrome"><div class="dots" id="dots"></div></div>
+<div class="hint">← → to navigate · F for fullscreen</div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var i=0, n=slides.length;
+  var dots=document.getElementById('dots'), count=document.getElementById('count');
+  slides.forEach(function(_,k){var d=document.createElement('i');d.onclick=function(){go(k)};dots.appendChild(d);});
+  function go(k){ i=Math.max(0,Math.min(n-1,k));
+    slides.forEach(function(s,x){s.classList.toggle('active',x===i);});
+    [].slice.call(dots.children).forEach(function(d,x){d.classList.toggle('on',x===i);});
+    count.textContent=(i+1)+' / '+n;
+  }
+  function next(){go(i+1)} function prev(){go(i-1)}
+  document.getElementById('navR').onclick=next;
+  document.getElementById('navL').onclick=prev;
+  document.addEventListener('keydown',function(e){
+    if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home'){go(0)} else if(e.key==='End'){go(n-1)}
+    else if(e.key==='f'||e.key==='F'){ if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();} else {document.exitFullscreen&&document.exitFullscreen();} }
+  });
+  go(0);
+})();
+</script>
+</body>
+</html>

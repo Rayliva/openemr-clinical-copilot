@@ -1,0 +1,26 @@
+# Never copy secrets or local state into the image — provided at runtime.
+**/.secrets
+.secrets
+**/.env
+.env
+.env.*
+!.env.example
+
+# Reinstalled in the image; keep the build context small.
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+
+# Not needed at runtime.
+.git
+.claude
+.vitest
+docs
+api
+evals
+scripts
+**/test
+**/*.test.ts
+tmp
+tmp-*
+*.log

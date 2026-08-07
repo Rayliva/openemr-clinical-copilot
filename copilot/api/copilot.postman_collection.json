@@ -1,0 +1,289 @@
+{
+  "info": {
+    "_postman_id": "c0p110t0-a5e7-4b21-9f3a-c0p110ta9e01",
+    "name": "Clinical Co-Pilot — Agent API",
+    "description": "Endpoints for the Clinical Co-Pilot sidecar agent: liveness (/health), readiness (/ready), a boundary-#1 token mint (/dev/session-token), the conversational agent turn (/chat, SSE, token-bound), the Week-2 document-ingestion routes (/documents/status, /documents/pending, /documents/extract), and the dev chat page (/). Each request asserts on its documented contract, so `newman run` doubles as a smoke test against a running agent. /chat and /documents/* bind the patient by a signed session token, so the collection first mints one (dev-mint stand-in) and reuses it — run the agent with COPILOT_DEV_MINT=true and COPILOT_BRIDGE_SECRET set (the /documents/* routes additionally need an ingestion service configured). Set {{baseUrl}} and {{patientId}} via the environment file. See docs/specs/api-collection.md and apps/agent/openapi.json.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3032" },
+    { "key": "patientId", "value": "a2326abc-c03c-4b9e-8af9-b7e03a9b4362" },
+    { "key": "sessionToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Liveness — GET /health",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "accept", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+        "description": "Cheap liveness probe (no I/O). Always 200 while the process is up."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('body is {status:\"ok\"}', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Readiness — GET /ready",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "accept", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/ready", "host": ["{{baseUrl}}"], "path": ["ready"] },
+        "description": "Dependency readiness (redis, openemr, langfuse, anthropic). 200 when all pass, 503 otherwise. Failing checks are named but carry no internal error text."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 or 503', () => pm.expect([200, 503]).to.include(pm.response.code));",
+              "const body = pm.response.json();",
+              "pm.test('status is ready|not_ready', () => pm.expect(['ready', 'not_ready']).to.include(body.status));",
+              "pm.test('checks is a named array', () => {",
+              "  pm.expect(body.checks).to.be.an('array');",
+              "  body.checks.forEach((c) => { pm.expect(c).to.have.property('name'); pm.expect(['ok','error']).to.include(c.status); });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mint session token — GET /dev/session-token",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "accept", "value": "application/json" }],
+        "url": {
+          "raw": "{{baseUrl}}/dev/session-token?patientFhirId={{patientId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["dev", "session-token"],
+          "query": [{ "key": "patientFhirId", "value": "{{patientId}}" }]
+        },
+        "description": "Boundary #1: /chat binds the patient by a signed token, never a body field. This is the DEV-ONLY mint stand-in for the OpenEMR bridge (enabled by COPILOT_DEV_MINT). The returned token is saved to {{sessionToken}} and reused by the /chat requests below. In production the OpenEMR bridge mints this, enforcing patient ownership."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('returns a token', () => pm.expect(body.token).to.be.a('string').and.not.empty);",
+              "pm.collectionVariables.set('sessionToken', body.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agent turn — POST /chat (grounded, safety flags)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "content-type", "value": "application/json" },
+          { "key": "accept", "value": "text/event-stream" },
+          { "key": "authorization", "value": "Bearer {{sessionToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Before I renew her medications, what should I confirm? What are her allergies?\" }\n  ]\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/chat", "host": ["{{baseUrl}}"], "path": ["chat"] },
+        "description": "The multi-turn agent endpoint. The patient is bound by the session token in the Authorization header (minted above), not the body. Send the full turn history; the verified answer streams back as Server-Sent Events (`data: {delta}` frames, then `event: done` with `{verdictOk, findings}`). For the seed patient (Susan Underwood) the answer includes the deterministic `Safety flags` section (med-status conflict + undocumented-allergy guard)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('streams SSE', () => pm.expect(pm.response.headers.get('content-type') || '').to.include('text/event-stream'));",
+              "pm.test('returns a correlation id', () => pm.expect(pm.response.headers.get('x-correlation-id')).to.be.a('string'));",
+              "const body = pm.response.text();",
+              "pm.test('emits a done event', () => pm.expect(body).to.include('event: done'));",
+              "// The answer streams word-per-frame, so assert on the done event's structured",
+              "// findings JSON (contiguous) rather than the chunked prose.",
+              "pm.test('delivers the med-status-conflict safety finding', () => pm.expect(body).to.include('medication-status-conflict'));",
+              "pm.test('delivers the undocumented-allergy safety finding', () => pm.expect(body).to.include('allergy-status-unknown'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agent turn — POST /chat (no token → 401)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "content-type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"Who is this patient?\" }\n  ]\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/chat", "host": ["{{baseUrl}}"], "path": ["chat"] },
+        "description": "Boundary #1: a request with no Authorization token is refused with 401 before any chart read — the pid can only come from a signed token."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('401 Unauthorized', () => pm.response.to.have.status(401));",
+              "pm.test('names the error, no internals', () => pm.expect(pm.response.json()).to.have.property('error'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agent turn — POST /chat (invalid body → 400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "content-type", "value": "application/json" },
+          { "key": "authorization", "value": "Bearer {{sessionToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"messages\": []\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/chat", "host": ["{{baseUrl}}"], "path": ["chat"] },
+        "description": "Boundary case: with a valid token but a body whose `messages` array is empty, the edge (Zod-validated) rejects with 400 — never a partial or 500."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+              "pm.test('names the error, no internals', () => pm.expect(pm.response.json()).to.have.property('error'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "W2 documents status — GET /documents/status",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "accept", "value": "application/json" },
+          { "key": "authorization", "value": "Bearer {{sessionToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/documents/status", "host": ["{{baseUrl}}"], "path": ["documents", "status"] },
+        "description": "Week-2 detect-only status for the notification dot (NO VLM call). Token-bound: the patient comes from the signed session token (minted above), never the body. Returns `{total, ready, extracting}` counts of pending documents. Registered only when the agent has an ingestion service + bridge secret configured."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('returns integer counts {total, ready, extracting}', () => {",
+              "  pm.expect(body.total).to.be.a('number');",
+              "  pm.expect(body.ready).to.be.a('number');",
+              "  pm.expect(body.extracting).to.be.a('number');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "W2 review drafts — POST /documents/pending",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "content-type", "value": "application/json" },
+          { "key": "accept", "value": "application/json" },
+          { "key": "authorization", "value": "Bearer {{sessionToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": { "raw": "{{baseUrl}}/documents/pending", "host": ["{{baseUrl}}"], "path": ["documents", "pending"] },
+        "description": "Week-2 document ingestion for the bound patient: returns review drafts (extracted values + confidence + bounding boxes + first-page image for the citation overlay). Read-only — it PROPOSES drafts, it never writes the chart. The patient comes from the session token; the body carries nothing patient-selecting. Response header `x-correlation-id` threads the request through the logs/traces."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('echoes a correlation id', () => pm.expect(pm.response.headers.get('x-correlation-id')).to.be.a('string'));",
+              "const body = pm.response.json();",
+              "pm.test('returns a documents array', () => pm.expect(body.documents).to.be.an('array'));",
+              "pm.test('each draft has an id, title, and ok|degraded status', () => {",
+              "  body.documents.forEach((d) => {",
+              "    pm.expect(d).to.have.property('documentId');",
+              "    pm.expect(d).to.have.property('title');",
+              "    pm.expect(['ok', 'degraded']).to.include(d.status);",
+              "  });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "W2 extract trigger — POST /documents/extract (user token → 403)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "content-type", "value": "application/json" },
+          { "key": "authorization", "value": "Bearer {{sessionToken}}" }
+        ],
+        "body": { "mode": "raw", "raw": "{}" },
+        "url": { "raw": "{{baseUrl}}/documents/extract", "host": ["{{baseUrl}}"], "path": ["documents", "extract"] },
+        "description": "Server-to-server extraction trigger. It accepts ONLY a confined `system:ingest` token — the PHP upload listener mints that and fires this fire-and-forget. A normal physician session token (what the dev-mint stand-in produces) is REFUSED with 403 here, proving the principal separation: a user token can never trigger a system extraction, and the system-ingest token can never reach a read path. (With the real system-ingest token this returns 202 `{status:\"accepted\"}` and extracts in the background.)"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('403 Forbidden (user token is not system:ingest)', () => pm.response.to.have.status(403));",
+              "pm.test('names the error, no internals', () => pm.expect(pm.response.json()).to.have.property('error'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dev chat page — GET /",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "accept", "value": "text/html" }],
+        "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] },
+        "description": "Self-contained dev chat UI (no build step). Useful for a live demo of the agent."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 OK', () => pm.response.to.have.status(200));",
+              "pm.test('serves HTML', () => pm.expect(pm.response.headers.get('content-type') || '').to.include('text/html'));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

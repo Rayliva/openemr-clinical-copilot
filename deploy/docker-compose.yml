@@ -1,0 +1,258 @@
+# Clinical Co-Pilot — public deployment stack (DigitalOcean single VM).
+#
+# Runs THIS fork's source (OpenEMR 8.2.0-dev) via the `flex` image, which builds
+# it (composer/npm/webpack) and self-configures the DB on first boot. Modeled on
+# docker/development-easy-light but stripped to production essentials: no xdebug,
+# selenium, phpMyAdmin, or developer tooling, and OpenEMR sits behind a Caddy TLS
+# edge instead of publishing host ports.
+#
+# The OpenEMR source is the repo itself (this file lives in deploy/, so `..` is
+# the repo root — on the droplet that's the git clone of the fork).
+#
+# Secrets + hostname come from ./.env (git-ignored). See .env.example.
+# Bring up (from this directory):  docker compose up -d
+services:
+  mysql:
+    restart: always
+    image: mariadb:11.8.8@sha256:be1ef4fe5f14589325c08a41c76334097ce66c86264b75e1d28342c742782a61
+    command: ['mariadbd', '--character-set-server=utf8mb4']
+    volumes:
+      - databasevolume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    healthcheck:
+      test: ['CMD', '/usr/local/bin/healthcheck.sh', '--su-mysql', '--connect', '--innodb_initialized']
+      start_period: 1m
+      start_interval: 10s
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  openemr:
+    restart: always
+    image: openemr/openemr:flex@sha256:1d2c8345a320cf2985c9d02138951267739ec498559ca724b3d5397e4568482e
+    # No host ports — Caddy terminates TLS and proxies to :443.
+    volumes:
+      # This fork's source (the repo). `..` = repo root = the git clone.
+      - ..:/openemr:ro
+      - ..:/var/www/localhost/htdocs/openemr:rw
+      # Build outputs + persistent state live in volumes, keeping the git clone clean.
+      - assetvolume:/var/www/localhost/htdocs/openemr/public/assets:rw
+      - themevolume:/var/www/localhost/htdocs/openemr/public/themes:rw
+      - sitesvolume:/var/www/localhost/htdocs/openemr/sites:rw
+      - nodemodules:/var/www/localhost/htdocs/openemr/node_modules:rw
+      - vendordir:/var/www/localhost/htdocs/openemr/vendor:rw
+      - webpackcachevolume:/var/www/localhost/htdocs/openemr/.webpack-cache:rw
+      - ccdanodemodules:/var/www/localhost/htdocs/openemr/ccdaservice/node_modules:rw
+      - ccdanodemodules2:/var/www/localhost/htdocs/openemr/ccdaservice/packages/oe-cqm-service/node_modules:rw
+      # NOTE: the copilot/node_modules mask (see the dev stack) is intentionally NOT
+      # applied here. The droplet builds the agent in-container, so the host clone has no
+      # copilot/node_modules — there is no rsync tax to avoid, and masking a path that
+      # does not exist under the read-only /openemr bind mount fails container start.
+      - logvolume:/var/log
+      # The flex entrypoint unconditionally rsyncs /couchdb/data, so this must
+      # exist even though we don't run a couchdb service.
+      - couchdbvolume:/couchdb/data:rw
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_ROOT_PASS: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: openemr
+      MYSQL_PASS: ${MYSQL_PASSWORD}
+      OE_USER: admin
+      OE_PASS: ${OE_ADMIN_PASSWORD}
+      # Build from the mounted local repo (this fork) instead of downloading.
+      EASY_DEV_MODE: "yes"
+      EASY_DEV_MODE_NEW: "yes"
+      # GitHub token to avoid composer API rate limits during the build (from .env).
+      GITHUB_COMPOSER_TOKEN: ${GITHUB_COMPOSER_TOKEN:-}
+      # Enable the REST/FHIR API the sidecar agent will read through.
+      OPENEMR_SETTING_rest_api: 1
+      OPENEMR_SETTING_rest_fhir_api: 1
+      OPENEMR_SETTING_rest_portal_api: 1
+      # SMART backend-services system/* scopes (the agent's client_credentials grant).
+      OPENEMR_SETTING_rest_system_scopes_api: 1
+      # OAuth2 issuer/base URL = our public hostname (needed for the agent's OAuth2).
+      OPENEMR_SETTING_site_addr_oath: 'https://${SITE_ADDRESS}'
+      # Clinical Co-Pilot bridge (oe-module-copilot): the mint endpoint reads this
+      # HMAC secret (must match the agent's), and the embedded UI points at the agent.
+      COPILOT_BRIDGE_SECRET: ${COPILOT_BRIDGE_SECRET}
+      COPILOT_AGENT_URL: 'https://copilot.${SITE_ADDRESS}'
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', '/usr/bin/curl', '--fail', '--insecure', '--location', '--show-error', '--silent', 'https://localhost/meta/health/readyz']
+      start_period: 10m   # first boot builds composer/npm/webpack — allow time
+      start_interval: 15s
+      interval: 1m
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    restart: always
+    image: caddy:2-alpine
+    # On both networks so it can proxy to OpenEMR (default) and the sidecar (copilot).
+    # The alias makes the public hostname resolve INTERNALLY to Caddy for the agent,
+    # avoiding NAT hairpin (a container can't reach the droplet's own public IP). The
+    # agent still reaches OpenEMR only through Caddy's proxy — never MariaDB directly.
+    networks:
+      default: {}
+      copilot:
+        aliases:
+          - ${SITE_ADDRESS}
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      - openemr
+      - agent
+      - langfuse
+
+  # --- Clinical Co-Pilot sidecar ---------------------------------------------
+  # Agent + cache + self-hosted observability live ONLY on the `copilot` network,
+  # so the agent CANNOT reach MariaDB (which is on `default`). It reads the chart
+  # solely through OpenEMR's public FHIR API, read-only.
+
+  redis:
+    restart: always
+    image: redis:7-alpine
+    # Cache only — no persistence (the Patient Snapshot is rebuildable).
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks: [copilot]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  langfuse-db:
+    restart: always
+    image: postgres:16-alpine
+    networks: [copilot]
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: ${LANGFUSE_DB_PASSWORD}
+      POSTGRES_DB: langfuse
+    volumes:
+      - langfuse-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  langfuse:
+    restart: always
+    image: langfuse/langfuse:2
+    networks: [copilot]
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://langfuse:${LANGFUSE_DB_PASSWORD}@langfuse-db:5432/langfuse
+      NEXTAUTH_URL: https://langfuse.${SITE_ADDRESS}
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET}
+      SALT: ${LANGFUSE_SALT}
+      ENCRYPTION_KEY: ${LANGFUSE_ENCRYPTION_KEY}
+      TELEMETRY_ENABLED: "false"
+      LANGFUSE_INIT_ORG_ID: copilot-org
+      LANGFUSE_INIT_PROJECT_ID: copilot
+      LANGFUSE_INIT_PROJECT_NAME: Clinical Co-Pilot
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+      LANGFUSE_INIT_USER_EMAIL: ${LANGFUSE_USER_EMAIL}
+      LANGFUSE_INIT_USER_NAME: Admin
+      LANGFUSE_INIT_USER_PASSWORD: ${LANGFUSE_USER_PASSWORD}
+    healthcheck:
+      # Langfuse's Next.js standalone server binds to the container's network interface
+      # (via its HOSTNAME env), NOT loopback — so `localhost` is refused even while the app
+      # is healthy. Probe the same hostname the server binds to. `$$` escapes compose
+      # interpolation so the container shell expands $HOSTNAME at runtime.
+      test: ["CMD-SHELL", "wget -q -O- http://$$HOSTNAME:3000/api/public/health >/dev/null 2>&1 || exit 1"]
+      start_period: 90s
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  agent:
+    restart: always
+    build:
+      context: ../copilot
+      dockerfile: Dockerfile
+    networks: [copilot]
+    environment:
+      PORT: "3000"
+      HOST: 0.0.0.0
+      NODE_ENV: production
+      LOG_LEVEL: info
+      # Build id served at GET /version so the adversarial-AI security platform auto-detects deploys
+      # (the image has no .git, so the fs fallback in version.ts resolves to "unknown" without this).
+      # Pass the deployed commit at `docker compose up` time, e.g.
+      #   COPILOT_VERSION=$(git -C /root/open-emr rev-parse --short HEAD) docker compose up -d --build agent
+      # Defaults to "unknown" if the deployer does not set it.
+      COPILOT_VERSION: ${COPILOT_VERSION:-unknown}
+      # Reads the chart via the PUBLIC FHIR API (issuer-matching OAuth); the box has
+      # a real Let's Encrypt cert, so TLS verification stays ON.
+      OPENEMR_BASE_URL: https://${SITE_ADDRESS}
+      OPENEMR_INSECURE_TLS: "false"
+      REDIS_URL: redis://redis:6379
+      LANGFUSE_HOST: http://langfuse:3000
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ANTHROPIC_MODEL: claude-sonnet-5
+      # Boundary #1: verify session tokens minted by the OpenEMR bridge (same secret).
+      COPILOT_BRIDGE_SECRET: ${COPILOT_BRIDGE_SECRET}
+      # Allow the embedded chat UI (served on the OpenEMR origin) to call /chat.
+      COPILOT_ALLOWED_ORIGIN: 'https://${SITE_ADDRESS}'
+      # Verification layer 2 (grounding judge): ON in prod — faithfulness over latency.
+      # Adds one cheap Haiku call per claim to confirm each cited row supports the claim.
+      COPILOT_GROUNDING_JUDGE: "true"
+      COPILOT_GROUNDING_MODEL: claude-haiku-4-5-20251001
+      # Bearer token gating the ops surfaces (/metrics, /dashboard, /alerts — E4/E7).
+      # Without it those routes are not registered (fail-closed). Value lives in .env.
+      COPILOT_METRICS_TOKEN: ${COPILOT_METRICS_TOKEN}
+      # W2 guideline RAG (hybrid retrieval + Cohere embed/rerank). Optional — absent or a
+      # failed corpus index degrades to chart-only. Value lives in .env (never committed).
+      COHERE_API_KEY: ${COHERE_API_KEY:-}
+      # W2 document ingestion: the vision model for extraction (Opus-class; extract-once).
+      COPILOT_VLM_MODEL: claude-opus-4-8
+    volumes:
+      # Read-only bind of the registered OpenEMR OAuth client (client json + PEM).
+      # Provisioned on the box; never committed, never in the image.
+      - ./secrets/copilot:/app/.secrets:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      start_period: 40s
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+networks:
+  default: {}
+  copilot: {}
+
+volumes:
+  databasevolume: {}
+  langfuse-pgdata: {}
+  assetvolume: {}
+  themevolume: {}
+  sitesvolume: {}
+  nodemodules: {}
+  vendordir: {}
+  webpackcachevolume: {}
+  ccdanodemodules: {}
+  ccdanodemodules2: {}
+  logvolume: {}
+  couchdbvolume: {}
+  caddydata: {}
+  caddyconfig: {}
