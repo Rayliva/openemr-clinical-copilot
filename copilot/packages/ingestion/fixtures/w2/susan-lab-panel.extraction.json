@@ -1,0 +1,133 @@
+{
+  "docType": "lab_pdf",
+  "results": [
+    {
+      "testName": "Hemoglobin A1c",
+      "value": "8.1",
+      "unit": "%",
+      "referenceRange": "<5.7",
+      "collectionDate": "2026-07-05",
+      "abnormalFlag": "high",
+      "confidence": 0.98,
+      "citation": {
+        "sourceType": "lab_pdf",
+        "sourceId": "fixture-susan-lab-panel",
+        "pageOrSection": "Diabetes",
+        "fieldOrChunkId": "a1c",
+        "quoteOrValue": "Hemoglobin A1c 8.1 % (H)"
+      }
+    },
+    {
+      "testName": "Glucose, Fasting",
+      "value": "165",
+      "unit": "mg/dL",
+      "referenceRange": "70-99",
+      "collectionDate": "2026-07-05",
+      "abnormalFlag": "high",
+      "confidence": 0.97,
+      "citation": {
+        "sourceType": "lab_pdf",
+        "sourceId": "fixture-susan-lab-panel",
+        "pageOrSection": "Diabetes",
+        "fieldOrChunkId": "fasting_glucose",
+        "quoteOrValue": "Glucose, Fasting 165 mg/dL (H)"
+      }
+    },
+    {
+      "testName": "LDL Cholesterol",
+      "value": "138",
+      "unit": "mg/dL",
+      "referenceRange": "<100",
+      "collectionDate": "2026-07-05",
+      "abnormalFlag": "high",
+      "confidence": 0.95,
+      "citation": {
+        "sourceType": "lab_pdf",
+        "sourceId": "fixture-susan-lab-panel",
+        "pageOrSection": "Lipid Panel",
+        "fieldOrChunkId": "ldl",
+        "quoteOrValue": "LDL Cholesterol 138 mg/dL (H)"
+      }
+    },
+    {
+      "testName": "HDL Cholesterol",
+      "value": "38",
+      "unit": "mg/dL",
+      "referenceRange": ">40",
+      "collectionDate": "2026-07-05",
+      "abnormalFlag": "low",
+      "confidence": 0.95,
+      "citation": {
+        "sourceType": "lab_pdf",
+        "sourceId": "fixture-susan-lab-panel",
+        "pageOrSection": "Lipid Panel",
+        "fieldOrChunkId": "hdl",
+        "quoteOrValue": "HDL Cholesterol 38 mg/dL (L)"
+      }
+    },
+    {
+      "testName": "Triglycerides",
+      "value": "210",
+      "unit": "mg/dL",
+      "referenceRange": "<150",
+      "collectionDate": "2026-07-05",
+      "abnormalFlag": "high",
+      "confidence": 0.94,
+      "citation": {
+        "sourceType": "lab_pdf",
+        "sourceId": "fixture-susan-lab-panel",
+        "pageOrSection": "Lipid Panel",
+        "fieldOrChunkId": "triglycerides",
+        "quoteOrValue": "Triglycerides 210 mg/dL (H)"
+      }
+    },
+    {
+      "testName": "eGFR",
+      "value": "45",
+      "unit": "mL/min/1.73m2",
+      "referenceRange": ">=60",
+      "collectionDate": "2026-07-05",
+      "abnormalFlag": "low",
+      "confidence": 0.93,
+      "citation": {
+        "sourceType": "lab_pdf",
+        "sourceId": "fixture-susan-lab-panel",
+        "pageOrSection": "Renal Function",
+        "fieldOrChunkId": "egfr",
+        "quoteOrValue": "eGFR 45 mL/min/1.73m2 (L)"
+      }
+    },
+    {
+      "testName": "Creatinine",
+      "value": "1.3",
+      "unit": "mg/dL",
+      "referenceRange": "0.6-1.1",
+      "collectionDate": "2026-07-05",
+      "abnormalFlag": "high",
+      "confidence": 0.96,
+      "citation": {
+        "sourceType": "lab_pdf",
+        "sourceId": "fixture-susan-lab-panel",
+        "pageOrSection": "Renal Function",
+        "fieldOrChunkId": "creatinine",
+        "quoteOrValue": "Creatinine 1.3 mg/dL (H)"
+      }
+    },
+    {
+      "testName": "Sodium",
+      "value": "140",
+      "unit": "mmol/L",
+      "referenceRange": "135-145",
+      "collectionDate": "2026-07-05",
+      "abnormalFlag": "normal",
+      "confidence": 0.97,
+      "citation": {
+        "sourceType": "lab_pdf",
+        "sourceId": "fixture-susan-lab-panel",
+        "pageOrSection": "Chemistry",
+        "fieldOrChunkId": "sodium",
+        "quoteOrValue": "Sodium 140 mmol/L"
+      }
+    }
+  ]
+}

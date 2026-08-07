@@ -1,0 +1,70 @@
+# Local development stack for the Clinical Co-Pilot sidecar.
+#
+# Mirrors the deploy topology and grows toward it: services are added as each
+# build iteration needs them (Redis now; OpenEMR + MySQL, Langfuse + its Postgres,
+# the agent, and Caddy later). During active dev the agent runs on the host
+# (`pnpm --filter @copilot/agent dev`) against these containers; a compose service
+# for the agent is added when we need the full stack / deploy parity.
+services:
+  redis:
+    image: redis:7-alpine
+    # Cache only — no persistence needed for the Patient Snapshot.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Self-hosted observability. Kept in-boundary so PHI-bearing traces (prompts,
+  # tool I/O, completions) never leave the trust boundary (ARCHITECTURE.md 2.6).
+  # Langfuse v2 is Postgres-only — simplest self-host. The LANGFUSE_INIT_* vars
+  # seed a deterministic org/project/user + API keys so no manual UI setup is
+  # needed. All values here are DEV-ONLY / synthetic.
+  langfuse-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse
+      POSTGRES_DB: langfuse
+    volumes:
+      - langfuse-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  langfuse:
+    image: langfuse/langfuse:2
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://langfuse:langfuse@langfuse-db:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: dev-nextauth-secret-change-in-prod
+      SALT: dev-salt-change-in-prod
+      ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      TELEMETRY_ENABLED: "false"
+      LANGFUSE_INIT_ORG_ID: copilot-org
+      LANGFUSE_INIT_PROJECT_ID: copilot
+      LANGFUSE_INIT_PROJECT_NAME: Clinical Co-Pilot
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: pk-lf-copilot-dev
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: sk-lf-copilot-dev
+      LANGFUSE_INIT_USER_EMAIL: dev@copilot.local
+      LANGFUSE_INIT_USER_NAME: Dev
+      LANGFUSE_INIT_USER_PASSWORD: dev-password
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3000/api/public/health >/dev/null 2>&1 || exit 1"]
+      start_period: 60s
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  langfuse-pgdata: {}

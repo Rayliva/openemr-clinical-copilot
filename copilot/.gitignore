@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.*
+!.env.example
+.secrets/
+*.log
+.DS_Store
+.vitest/
+*.tsbuildinfo
+# promptfoo local eval artifacts (results are re-generated on demand)
+.promptfoo/
+evals/output/
+evals/*.results.json
+# tesseract.js traineddata cache (downloaded by generate-ocr-maps; not a repo artifact)
+*.traineddata

@@ -1,0 +1,4 @@
+# Real secrets live only on the server, never in git.
+.env
+# The sidecar's OpenEMR OAuth client (client json + private key PEM).
+secrets/

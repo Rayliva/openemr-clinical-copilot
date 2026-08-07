@@ -1,0 +1,31 @@
+{
+  "name": "@copilot/root",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "prepare": "node -e \"try{require('node:fs').accessSync('scripts/install-git-hook.mjs');require('node:child_process').execSync('node scripts/install-git-hook.mjs',{stdio:'inherit'})}catch(e){}\"",
+    "gate": "bash scripts/eval-gate.sh",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "dev": "pnpm --filter @copilot/agent dev",
+    "eval": "promptfoo eval -c evals/promptfooconfig.yaml -j 2",
+    "eval:safety": "promptfoo eval -c evals/promptfooconfig.yaml --filter-pattern \"\\[safety\\]\" -j 1",
+    "api:smoke": "npx --yes newman run api/copilot.postman_collection.json -e api/local.postman_environment.json"
+  },
+  "devDependencies": {
+    "promptfoo": "^0.118.17",
+    "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3"],
+    "overrides": {
+      "better-sqlite3": "^12.2.0"
+    }
+  }
+}

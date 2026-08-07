@@ -1,0 +1,506 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Clinical Co-Pilot — Agent API",
+    "version": "0.1.0",
+    "description": "HTTP surface of the Clinical Co-Pilot sidecar agent (Fastify). Documents EVERY route registered in `src/app.ts`. Route registration is CONDITIONAL: `/chat` needs an agent + a non-empty bridge secret; the `/documents/*` routes need an ingestion service + the bridge secret; `/dev/session-token` is dev-only (`devMint`); `/metrics`, `/dashboard`, `/alerts` need an ops token. All conditional routes fail CLOSED — when the required dependency/secret is absent the route is not registered at all (a 404), never an open door. Auth is a bearer token in every case except the always-on probes and the dev UI; there is NO cookie/CSRF auth on the agent. Schemas are derived from the Zod contracts the routes parse, not invented.",
+    "contact": { "name": "Clinical Co-Pilot", "url": "https://www.open-emr.org" },
+    "license": { "name": "GNU GPL 3", "url": "https://github.com/openemr/openemr/blob/master/LICENSE" }
+  },
+  "servers": [
+    { "url": "http://localhost:3032", "description": "Local dev agent" }
+  ],
+  "tags": [
+    { "name": "probes", "description": "Liveness/readiness — always registered, unauthenticated." },
+    { "name": "chat", "description": "Conversational agent turn (SSE). Token-bound patient scope." },
+    { "name": "documents", "description": "Week-2 document ingestion (detect / review-drafts / extract)." },
+    { "name": "ops", "description": "Operational metrics, dashboard, alerts — ops-token gated." },
+    { "name": "dev", "description": "DEV-ONLY helpers. Never registered in production." },
+    { "name": "ui", "description": "Self-contained dev chat page." }
+  ],
+  "components": {
+    "securitySchemes": {
+      "SessionBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Boundary-#1 signed session token (HMAC). Minted by the OpenEMR bridge in prod (or `GET /dev/session-token` in dev). The bound patient (`patientFhirId`/`pid`) comes from this token — never from the request body. Verified (signature -> expiry -> shape) on every request. A confined `system:ingest` token is REJECTED (403) on these user routes."
+      },
+      "SystemIngestBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A confined `subject: system:ingest` session token. Accepted ONLY by `POST /documents/extract`; a normal user token is rejected there (403), and this token is rejected (403) on every user/read route."
+      },
+      "OpsBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Static ops token (constant-time compared). Gates `/metrics`, `/dashboard`, `/alerts`. May alternatively be supplied as a `?token=` query param (so a browser can auto-refresh the dashboard); the query value is redacted from logs."
+      }
+    },
+    "schemas": {
+      "HealthStatus": {
+        "type": "object",
+        "required": ["status"],
+        "properties": { "status": { "type": "string", "enum": ["ok"] } }
+      },
+      "ReadinessCheck": {
+        "type": "object",
+        "required": ["name", "status"],
+        "properties": {
+          "name": { "type": "string", "example": "redis" },
+          "status": { "type": "string", "enum": ["ok", "error"] }
+        }
+      },
+      "ReadinessReport": {
+        "type": "object",
+        "required": ["status", "checks"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ready", "degraded", "not_ready"],
+            "description": "`ready` = all checks pass; `degraded` = a non-critical dependency (e.g. RAG) failed but the core serves (still HTTP 200); `not_ready` = a critical dependency failed (HTTP 503)."
+          },
+          "checks": { "type": "array", "items": { "$ref": "#/components/schemas/ReadinessCheck" } }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": ["role", "content"],
+        "properties": {
+          "role": { "type": "string", "enum": ["user", "assistant"] },
+          "content": { "type": "string", "minLength": 1 }
+        }
+      },
+      "ChatRequest": {
+        "type": "object",
+        "required": ["messages"],
+        "additionalProperties": true,
+        "description": "Multi-turn history. Any `patientId` a client sends is IGNORED — the patient is bound by the token (`.passthrough()` tolerates extra keys but nothing reads them).",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/components/schemas/ChatMessage" }
+          }
+        }
+      },
+      "IngestionStatus": {
+        "type": "object",
+        "required": ["total", "ready", "extracting"],
+        "description": "Cheap detect-only status for the notification dot (no VLM call).",
+        "properties": {
+          "total": { "type": "integer", "description": "Pending documents detected for the bound patient." },
+          "ready": { "type": "integer", "description": "How many are extracted + cached, ready to review." },
+          "extracting": { "type": "integer", "description": "How many are mid-extraction (in flight)." }
+        }
+      },
+      "ReviewBox": {
+        "type": "object",
+        "required": ["page", "x", "y", "w", "h"],
+        "description": "Bounding box (normalized page coords) for the citation overlay. Absent when the value could not be tied to a tight box.",
+        "properties": {
+          "page": { "type": "integer" },
+          "x": { "type": "number" }, "y": { "type": "number" },
+          "w": { "type": "number" }, "h": { "type": "number" }
+        }
+      },
+      "ReviewResult": {
+        "type": "object",
+        "required": ["testName", "value", "abnormalFlag", "confidence", "matchState"],
+        "properties": {
+          "testName": { "type": "string" },
+          "value": { "type": "string" },
+          "unit": { "type": "string" },
+          "referenceRange": { "type": "string" },
+          "abnormalFlag": { "type": "string" },
+          "confidence": { "type": "number" },
+          "matchState": {
+            "type": "string",
+            "description": "Box-match outcome: a tight box, a page-level 'approximate', or 'not found on page' (forced physician review). Never a silent fill."
+          },
+          "box": { "$ref": "#/components/schemas/ReviewBox" }
+        }
+      },
+      "ReviewDraft": {
+        "type": "object",
+        "required": ["documentId", "title", "status"],
+        "description": "One reviewable document draft. When `status` is `degraded`, `issues` is present and `results` is absent; when `ok`, `results` is present.",
+        "properties": {
+          "documentId": { "type": "string" },
+          "title": { "type": "string" },
+          "date": { "type": "string" },
+          "status": { "type": "string", "enum": ["ok", "degraded"] },
+          "pageImageBase64": { "type": "string", "description": "First page rasterized for the overlay (base64)." },
+          "pageMediaType": { "type": "string", "example": "image/png" },
+          "results": { "type": "array", "items": { "$ref": "#/components/schemas/ReviewResult" } },
+          "issues": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "DocumentsPendingResponse": {
+        "type": "object",
+        "required": ["documents"],
+        "properties": {
+          "documents": { "type": "array", "items": { "$ref": "#/components/schemas/ReviewDraft" } }
+        }
+      },
+      "ExtractAccepted": {
+        "type": "object",
+        "required": ["status"],
+        "properties": { "status": { "type": "string", "enum": ["accepted"] } }
+      },
+      "SessionTokenResponse": {
+        "type": "object",
+        "required": ["token"],
+        "properties": { "token": { "type": "string", "description": "A signed boundary-#1 session token (HMAC)." } }
+      },
+      "AlertsResponse": {
+        "type": "object",
+        "required": ["status", "alerts", "firing"],
+        "description": "`alerts` lists EVERY defined rule (discoverable by name regardless of state); `firing` is the warning/critical subset; `status` is `firing` when any rule is firing else `ok`.",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "firing"] },
+          "alerts": {
+            "type": "array",
+            "description": "Every defined alert rule with its current status — includes the W2 rules extraction_failure_rate, rag_retrieval_latency, supervisor_hop_cap_rate, eval_regression_detection.",
+            "items": { "$ref": "#/components/schemas/AlertOutcome" }
+          },
+          "firing": {
+            "type": "array",
+            "description": "The subset of `alerts` with status warning or critical, most severe first.",
+            "items": { "$ref": "#/components/schemas/AlertOutcome" }
+          }
+        }
+      },
+      "AlertOutcome": {
+        "type": "object",
+        "required": ["name", "status", "threshold", "description"],
+        "properties": {
+          "name": { "type": "string" },
+          "status": { "type": "string", "enum": ["ok", "warning", "critical", "insufficient_data"] },
+          "value": { "type": ["number", "null"] },
+          "threshold": { "type": "number" },
+          "description": { "type": "string", "description": "PHI-free: what the rule means + (when firing) specifics." }
+        }
+      },
+      "MetricsSnapshot": {
+        "type": "object",
+        "description": "Live operational window (PHI-free: counts, latencies, tool/doc-type/route names only). Counters reset on restart; durable history lives in Langfuse. Shape is the `MetricsRegistry.snapshot()` DTO — a superset of the fields below (requests, latency percentiles, verification pass/fail, per-tool stats, W2 ingestion/retrieval/supervisor sections).",
+        "additionalProperties": true,
+        "properties": {
+          "windowSize": { "type": "integer" },
+          "requestsTotal": { "type": "integer" },
+          "requestsFailed": { "type": "integer" },
+          "errorRate": { "type": "number" }
+        }
+      },
+      "LabSeriesResponse": {
+        "description": "Absence-aware lab trend result. `documented:false` means no lab Observations are on file (never rendered as \"normal\"). When `documented:true`, `series` is one entry per test — the union of every committed extracted lab reading across all uploaded PDFs, grouped by test over its collection dates, each point traceable to its source document via `obsUuid`.",
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["documented"],
+            "properties": { "documented": { "type": "boolean", "enum": [false] } }
+          },
+          {
+            "type": "object",
+            "required": ["documented", "series"],
+            "properties": {
+              "documented": { "type": "boolean", "enum": [true] },
+              "series": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["test", "points"],
+                  "properties": {
+                    "test": { "type": "string" },
+                    "code": { "type": "string", "description": "LOINC code when present, else the name used as the fallback group key." },
+                    "unit": { "type": "string" },
+                    "points": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["date", "value", "rawValue", "obsUuid"],
+                        "properties": {
+                          "date": { "type": "string", "description": "Collection date/time (FHIR effectiveDateTime)." },
+                          "value": { "type": "number", "description": "Parsed numeric value plotted on the y-axis." },
+                          "rawValue": { "type": "string", "description": "Value exactly as recorded (tooltip)." },
+                          "obsUuid": { "type": "string", "description": "Observation uuid — traces the point to its source document (click-to-source)." }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "description": "Generic error envelope. Never carries internal detail (SQL/paths/PHI) — the detail is logged with the correlation id. Unhandled errors additionally include `correlationId`.",
+        "properties": {
+          "error": { "type": "string" },
+          "correlationId": { "type": "string" }
+        }
+      }
+    },
+    "parameters": {
+      "CorrelationIdHeader": {
+        "name": "x-correlation-id",
+        "in": "header",
+        "required": false,
+        "schema": { "type": "string" },
+        "description": "Echoed if supplied, else generated. Threaded through every log line and returned on the response."
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Missing/invalid/expired bearer token.",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "Forbidden": {
+        "description": "Valid token, but the wrong principal for this route (e.g. a system-ingest token on a user route, or a user token on the extract trigger).",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "CorsPreflight": { "description": "CORS preflight. 204 No Content; CORS headers set only when the request Origin exactly matches the configured allowed origin." }
+    }
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["ui"],
+        "summary": "Dev chat page",
+        "description": "Self-contained dev chat UI (no build step). Always registered.",
+        "responses": {
+          "200": { "description": "HTML page.", "content": { "text/html": { "schema": { "type": "string" } } } }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["probes"],
+        "summary": "Liveness probe",
+        "description": "Cheap liveness (no I/O). Always 200 while the process is up. Always registered, unauthenticated.",
+        "responses": {
+          "200": { "description": "Process is up.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HealthStatus" } } } }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "tags": ["probes"],
+        "summary": "Build id",
+        "description": "Read-only, unauthenticated opaque build id (a short commit sha) so external tooling can auto-stamp which build it tested and detect when the deployed build changes. Returns only the id, no branch/dependency detail. Always registered.",
+        "responses": {
+          "200": {
+            "description": "The current build id.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["version"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "version": { "type": "string", "description": "Opaque build id: COPILOT_VERSION env, else the git HEAD short sha, else \"unknown\"." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": ["probes"],
+        "summary": "Readiness probe",
+        "description": "Runs every registered dependency check. 200 for `ready` OR `degraded`; 503 for `not_ready`. Failing checks are named but carry no internal error text. Always registered, unauthenticated.",
+        "responses": {
+          "200": { "description": "`ready` or `degraded`.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReadinessReport" } } } },
+          "503": { "description": "`not_ready` — a critical dependency failed.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReadinessReport" } } } }
+        }
+      }
+    },
+    "/chat": {
+      "options": {
+        "tags": ["chat"],
+        "summary": "CORS preflight for /chat",
+        "responses": { "204": { "$ref": "#/components/responses/CorsPreflight" } }
+      },
+      "post": {
+        "tags": ["chat"],
+        "summary": "Agent turn (SSE)",
+        "description": "Multi-turn conversational endpoint. The patient is bound by the session token (verified every request); the pid never comes from the body. The verified answer streams back as Server-Sent Events: `data: {\"delta\":\"…\"}` frames, then a final `event: done` frame with `{ verdictOk, findings, ungrounded }`. Registered only when an agent + a non-empty bridge secret are configured (else 404).",
+        "security": [{ "SessionBearer": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/CorrelationIdHeader" }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChatRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "SSE stream of the verified answer. Response header `x-correlation-id` is set.",
+            "headers": { "x-correlation-id": { "schema": { "type": "string" } } },
+            "content": { "text/event-stream": { "schema": { "type": "string" }, "example": "data: {\"delta\":\"No \"}\n\ndata: {\"delta\":\"allergies \"}\n\nevent: done\ndata: {\"verdictOk\":true,\"findings\":[],\"ungrounded\":[]}\n\n" } }
+          },
+          "400": { "description": "Body failed Zod validation (e.g. empty `messages`).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/documents/status": {
+      "options": {
+        "tags": ["documents"],
+        "summary": "CORS preflight for /documents/status",
+        "responses": { "204": { "$ref": "#/components/responses/CorsPreflight" } }
+      },
+      "get": {
+        "tags": ["documents"],
+        "summary": "Pending-document status (notification dot)",
+        "description": "Cheap detect-only status (NO VLM call), safe to poll on chart-open. Patient bound by the token. Registered only when an ingestion service + bridge secret are configured (else 404).",
+        "security": [{ "SessionBearer": [] }],
+        "responses": {
+          "200": { "description": "Detect-only counts.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IngestionStatus" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "502": { "description": "Upstream document/status failure (generic — detail logged).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/documents/pending": {
+      "options": {
+        "tags": ["documents"],
+        "summary": "CORS preflight for /documents/pending",
+        "responses": { "204": { "$ref": "#/components/responses/CorsPreflight" } }
+      },
+      "post": {
+        "tags": ["documents"],
+        "summary": "Review drafts for the bound patient",
+        "description": "Runs Week-2 ingestion for the bound patient and returns review drafts (extracted values + confidence + bounding boxes + page image for the overlay). Read-only: it proposes drafts, it never writes the chart. The body carries nothing patient-selecting. Registered only when an ingestion service + bridge secret are configured (else 404).",
+        "security": [{ "SessionBearer": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/CorrelationIdHeader" }],
+        "requestBody": {
+          "required": false,
+          "description": "No body is read — the patient comes from the token.",
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Review drafts. Header `x-correlation-id` is set.",
+            "headers": { "x-correlation-id": { "schema": { "type": "string" } } },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentsPendingResponse" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "502": { "description": "Ingestion failure (generic — detail logged).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/documents/extract": {
+      "post": {
+        "tags": ["documents"],
+        "summary": "Server-to-server extraction trigger",
+        "description": "Server-to-server upload trigger: extract + cache the patient's pending docs, then return 202 immediately (extraction runs in the background; the physician reads results later via `/documents/pending`). NO CORS (never browser-reachable). Accepts ONLY a confined `system:ingest` token — a leaked/forged user token cannot reach it, and this token cannot reach any read path. Registered only when an ingestion service + bridge secret are configured (else 404).",
+        "security": [{ "SystemIngestBearer": [] }],
+        "requestBody": {
+          "required": false,
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
+        "responses": {
+          "202": { "description": "Accepted; extraction runs in the background.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExtractAccepted" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": ["ops"],
+        "summary": "Live operational metrics (JSON)",
+        "description": "The live operational window as JSON (PHI-free). Ops-token gated (bearer or `?token=`). Registered only when a metrics registry + ops token are configured (else 404).",
+        "security": [{ "OpsBearer": [] }],
+        "parameters": [
+          { "name": "token", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Ops token alternative to the Authorization header. Redacted from logs." }
+        ],
+        "responses": {
+          "200": { "description": "Metrics snapshot.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MetricsSnapshot" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "tags": ["ops"],
+        "summary": "Operational dashboard (HTML)",
+        "description": "The same live window rendered as an auto-refreshing HTML page. Ops-token gated (bearer or `?token=`). Registered only when a metrics registry + ops token are configured (else 404).",
+        "security": [{ "OpsBearer": [] }],
+        "parameters": [
+          { "name": "token", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Ops token alternative to the Authorization header. Redacted from logs." }
+        ],
+        "responses": {
+          "200": { "description": "HTML dashboard.", "content": { "text/html": { "schema": { "type": "string" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/alerts": {
+      "get": {
+        "tags": ["ops"],
+        "summary": "Deterministic alert evaluation",
+        "description": "Evaluates the metrics snapshot through the deterministic alert rule set; firing rules are logged structured. Ops-token gated (bearer or `?token=`). Registered only when a metrics registry + ops token are configured (else 404).",
+        "security": [{ "OpsBearer": [] }],
+        "parameters": [
+          { "name": "token", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Ops token alternative to the Authorization header. Redacted from logs." }
+        ],
+        "responses": {
+          "200": { "description": "Alert evaluation result.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AlertsResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/dev/session-token": {
+      "get": {
+        "tags": ["dev"],
+        "summary": "DEV-ONLY session-token mint",
+        "description": "DEV-ONLY local stand-in for the OpenEMR `GET /copilot/session-token` bridge. Mints a signed session token for any `patientFhirId` — it does NOT enforce ownership, so it is acceptable only against synthetic local data. Registered solely when `devMint` is enabled; NEVER in production.",
+        "parameters": [
+          { "name": "patientFhirId", "in": "query", "required": true, "schema": { "type": "string", "minLength": 1 }, "description": "The patient FHIR id to bind into the minted token." }
+        ],
+        "responses": {
+          "200": { "description": "A signed session token.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SessionTokenResponse" } } } },
+          "400": { "description": "`patientFhirId` missing.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "Mint unavailable — the bridge secret is not configured.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/labs/series": {
+      "options": {
+        "tags": ["labs"],
+        "summary": "CORS preflight for /labs/series",
+        "responses": { "204": { "$ref": "#/components/responses/CorsPreflight" } }
+      },
+      "post": {
+        "tags": ["labs"],
+        "summary": "Lab trend series for the bound patient",
+        "description": "Returns the bound patient's committed lab readings grouped into per-test time series — the data source for the trend-chart widget. The patient is fixed by the verified session token (the body carries nothing patient-selecting). Read-only, no LLM: a deterministic data view (like the review UI), so it does not pass the generation gate, but every point carries its Observation provenance (`obsUuid`) and the request is pid-bound + fail-closed. A confined `system:ingest` token is rejected (403) — this is a read path. Registered only when a lab-series reader + a non-empty bridge secret are configured (else 404).",
+        "security": [{ "SessionBearer": [] }],
+        "requestBody": {
+          "required": false,
+          "description": "No body is read — the patient comes from the token.",
+          "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Per-test lab time series (or `documented:false`). Header `x-correlation-id` is set.",
+            "headers": { "x-correlation-id": { "schema": { "type": "string" } } },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LabSeriesResponse" } } }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "502": { "description": "Lab series read failure (generic — detail logged).", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    }
+  }
+}
