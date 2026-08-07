@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Laboratory Report — Nguyen, Frank</title>
+<style>
+  body { font: 13px/1.5 "Courier New", monospace; color: #111; margin: 32px; max-width: 720px; }
+  h1 { font-size: 18px; margin: 0 0 2px; letter-spacing: .5px; }
+  .lab { font-size: 12px; color: #333; }
+  .meta { margin: 10px 0 18px; font-size: 12px; }
+  .meta div { margin: 1px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #ccc; }
+  th { border-bottom: 2px solid #333; text-transform: uppercase; font-size: 11px; }
+  .flag-H { color: #b00; font-weight: bold; }
+  .flag-L { color: #06c; font-weight: bold; }
+  .section { margin-top: 16px; font-weight: bold; text-decoration: underline; }
+  footer { margin-top: 24px; font-size: 11px; color: #666; }
+</style>
+</head>
+<body>
+  <h1>UNIFIED CLINICAL LABORATORIES</h1>
+  <div class="lab">Certified Clinical Laboratory · CLIA #99D-SYNTH · Austin, TX</div>
+  <div class="meta">
+    <div><b>Patient:</b> Nguyen, Frank &nbsp;&nbsp; <b>DOB:</b> 09/09/1962 &nbsp;&nbsp; <b>Sex:</b> M</div>
+    <div><b>Ordering provider:</b> Lee, Donna MD</div>
+    <div><b>Collected:</b> 2026-06-25 &nbsp;&nbsp; <b>Reported:</b> 2026-06-26 &nbsp;&nbsp; <b>Accession:</b> SYN-2026-0625-8</div>
+  </div>
+
+  <div class="section">CARDIAC</div>
+  <table>
+    <tr><th>Test</th><th>Result</th><th>Units</th><th>Reference</th><th>Flag</th></tr>
+    <tr><td>BNP</td><td>612</td><td>pg/mL</td><td>&lt;100</td><td class="flag-H">H</td></tr>
+  </table>
+
+  <div class="section">COAGULATION</div>
+  <table>
+    <tr><th>Test</th><th>Result</th><th>Units</th><th>Reference</th><th>Flag</th></tr>
+    <tr><td>INR</td><td>2.6</td><td></td><td>2.0-3.0 (target)</td><td></td></tr>
+    <tr><td>Prothrombin Time</td><td>28</td><td>sec</td><td>11-13.5</td><td class="flag-H">H</td></tr>
+  </table>
+
+  <div class="section">BASIC METABOLIC PANEL</div>
+  <table>
+    <tr><th>Test</th><th>Result</th><th>Units</th><th>Reference</th><th>Flag</th></tr>
+    <tr><td>Sodium</td><td>136</td><td>mmol/L</td><td>135-145</td><td></td></tr>
+    <tr><td>Potassium</td><td>4.6</td><td>mmol/L</td><td>3.5-5.1</td><td></td></tr>
+    <tr><td>Creatinine</td><td>1.3</td><td>mg/dL</td><td>0.6-1.2</td><td class="flag-H">H</td></tr>
+    <tr><td>eGFR</td><td>58</td><td>mL/min/1.73m2</td><td>&ge;60</td><td class="flag-L">L</td></tr>
+  </table>
+
+  <footer>SYNTHETIC DOCUMENT — for Clinical Co-Pilot demo only. Not a real patient or lab result.</footer>
+</body>
+</html>

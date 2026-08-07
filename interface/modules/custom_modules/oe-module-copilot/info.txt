@@ -1,0 +1,1 @@
+Clinical Co-Pilot bridge: mints per-owned-patient session tokens for the sidecar agent and serves the embedded chat UI.

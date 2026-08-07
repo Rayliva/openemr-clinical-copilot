@@ -1,0 +1,385 @@
+T=1783653821
+deploy-agent-1|0.07%|154.3MiB / 3.82GiB
+deploy-openemr-1|0.43%|366.2MiB / 3.82GiB
+T=1783653824
+deploy-agent-1|0.08%|154.2MiB / 3.82GiB
+deploy-openemr-1|0.47%|366.2MiB / 3.82GiB
+T=1783653826
+deploy-agent-1|0.15%|154.2MiB / 3.82GiB
+deploy-openemr-1|0.49%|366.2MiB / 3.82GiB
+T=1783653828
+deploy-agent-1|0.09%|154.2MiB / 3.82GiB
+deploy-openemr-1|0.43%|366.2MiB / 3.82GiB
+T=1783653830
+deploy-agent-1|0.13%|154.2MiB / 3.82GiB
+deploy-openemr-1|0.40%|366.2MiB / 3.82GiB
+T=1783653832
+deploy-agent-1|3.08%|154.5MiB / 3.82GiB
+deploy-openemr-1|2.19%|366.4MiB / 3.82GiB
+T=1783653834
+deploy-agent-1|16.99%|156.3MiB / 3.82GiB
+deploy-openemr-1|15.91%|365.3MiB / 3.82GiB
+T=1783653836
+deploy-agent-1|6.07%|156.6MiB / 3.82GiB
+deploy-openemr-1|0.43%|365.3MiB / 3.82GiB
+T=1783653838
+deploy-agent-1|4.08%|157MiB / 3.82GiB
+deploy-openemr-1|0.42%|365.3MiB / 3.82GiB
+T=1783653840
+deploy-agent-1|31.42%|161MiB / 3.82GiB
+deploy-openemr-1|54.66%|369.9MiB / 3.82GiB
+T=1783653842
+deploy-agent-1|10.17%|163.2MiB / 3.82GiB
+deploy-openemr-1|96.67%|389.2MiB / 3.82GiB
+T=1783653844
+deploy-agent-1|16.94%|164.5MiB / 3.82GiB
+deploy-openemr-1|63.66%|405.1MiB / 3.82GiB
+T=1783653846
+deploy-agent-1|37.22%|168.5MiB / 3.82GiB
+deploy-openemr-1|43.96%|411.3MiB / 3.82GiB
+T=1783653848
+deploy-agent-1|15.05%|170.6MiB / 3.82GiB
+deploy-openemr-1|76.17%|412MiB / 3.82GiB
+T=1783653850
+deploy-agent-1|11.90%|170.9MiB / 3.82GiB
+deploy-openemr-1|44.43%|410.4MiB / 3.82GiB
+T=1783653852
+deploy-agent-1|34.18%|177MiB / 3.82GiB
+deploy-openemr-1|52.00%|403.7MiB / 3.82GiB
+T=1783653854
+deploy-agent-1|9.46%|182.9MiB / 3.82GiB
+deploy-openemr-1|86.03%|406.4MiB / 3.82GiB
+T=1783653856
+deploy-agent-1|15.02%|186.8MiB / 3.82GiB
+deploy-openemr-1|57.49%|400.2MiB / 3.82GiB
+T=1783653859
+deploy-agent-1|12.93%|188.1MiB / 3.82GiB
+deploy-openemr-1|58.71%|390.2MiB / 3.82GiB
+T=1783653861
+deploy-agent-1|11.39%|189.5MiB / 3.82GiB
+deploy-openemr-1|32.31%|382.6MiB / 3.82GiB
+T=1783653863
+deploy-agent-1|13.17%|191.1MiB / 3.82GiB
+deploy-openemr-1|68.56%|383.4MiB / 3.82GiB
+T=1783653865
+deploy-agent-1|9.75%|192.5MiB / 3.82GiB
+deploy-openemr-1|73.12%|391.3MiB / 3.82GiB
+T=1783653867
+deploy-agent-1|11.30%|193.9MiB / 3.82GiB
+deploy-openemr-1|51.80%|387.1MiB / 3.82GiB
+T=1783653869
+deploy-agent-1|18.86%|195.1MiB / 3.82GiB
+deploy-openemr-1|58.29%|383.3MiB / 3.82GiB
+T=1783653871
+deploy-agent-1|14.08%|196.6MiB / 3.82GiB
+deploy-openemr-1|52.79%|388MiB / 3.82GiB
+T=1783653873
+deploy-agent-1|9.69%|197.9MiB / 3.82GiB
+deploy-openemr-1|69.68%|400.5MiB / 3.82GiB
+T=1783653875
+deploy-agent-1|11.26%|199.2MiB / 3.82GiB
+deploy-openemr-1|36.80%|403.3MiB / 3.82GiB
+T=1783653877
+deploy-agent-1|38.34%|208.9MiB / 3.82GiB
+deploy-openemr-1|56.93%|400.4MiB / 3.82GiB
+T=1783653879
+deploy-agent-1|16.06%|201MiB / 3.82GiB
+deploy-openemr-1|47.24%|400.2MiB / 3.82GiB
+T=1783653881
+deploy-agent-1|15.91%|201.6MiB / 3.82GiB
+deploy-openemr-1|84.17%|433.3MiB / 3.82GiB
+T=1783653883
+deploy-agent-1|8.11%|201.5MiB / 3.82GiB
+deploy-openemr-1|89.07%|433.8MiB / 3.82GiB
+T=1783653885
+deploy-agent-1|19.06%|202.1MiB / 3.82GiB
+deploy-openemr-1|61.51%|389MiB / 3.82GiB
+T=1783653887
+deploy-agent-1|12.70%|202.1MiB / 3.82GiB
+deploy-openemr-1|34.27%|384.5MiB / 3.82GiB
+T=1783653889
+deploy-agent-1|16.08%|202.4MiB / 3.82GiB
+deploy-openemr-1|66.72%|389.5MiB / 3.82GiB
+T=1783653891
+deploy-agent-1|9.84%|202.6MiB / 3.82GiB
+deploy-openemr-1|61.90%|390.8MiB / 3.82GiB
+T=1783653893
+deploy-agent-1|35.15%|202.6MiB / 3.82GiB
+deploy-openemr-1|62.83%|386.2MiB / 3.82GiB
+T=1783653896
+deploy-agent-1|12.58%|202.8MiB / 3.82GiB
+deploy-openemr-1|59.96%|383MiB / 3.82GiB
+T=1783653898
+deploy-agent-1|8.27%|202.8MiB / 3.82GiB
+deploy-openemr-1|60.86%|375.2MiB / 3.82GiB
+T=1783653900
+deploy-agent-1|16.54%|203MiB / 3.82GiB
+deploy-openemr-1|67.42%|375.2MiB / 3.82GiB
+T=1783653902
+deploy-agent-1|20.15%|203MiB / 3.82GiB
+deploy-openemr-1|54.78%|370.8MiB / 3.82GiB
+T=1783653904
+deploy-agent-1|8.24%|201.4MiB / 3.82GiB
+deploy-openemr-1|3.26%|366.8MiB / 3.82GiB
+T=1783653906
+deploy-agent-1|3.43%|201.4MiB / 3.82GiB
+deploy-openemr-1|2.98%|358.2MiB / 3.82GiB
+T=1783653908
+deploy-agent-1|1.50%|201.3MiB / 3.82GiB
+deploy-openemr-1|0.42%|358.2MiB / 3.82GiB
+T=1783653910
+deploy-agent-1|0.85%|201.3MiB / 3.82GiB
+deploy-openemr-1|0.41%|358.2MiB / 3.82GiB
+T=1783653912
+deploy-agent-1|29.41%|204.3MiB / 3.82GiB
+deploy-openemr-1|24.11%|361.5MiB / 3.82GiB
+T=1783653914
+deploy-agent-1|41.28%|209.3MiB / 3.82GiB
+deploy-openemr-1|57.08%|370.6MiB / 3.82GiB
+T=1783653916
+deploy-agent-1|46.46%|214.4MiB / 3.82GiB
+deploy-openemr-1|54.11%|394.6MiB / 3.82GiB
+T=1783653918
+deploy-agent-1|4.88%|216MiB / 3.82GiB
+deploy-openemr-1|105.13%|439.9MiB / 3.82GiB
+T=1783653920
+deploy-agent-1|8.82%|218.4MiB / 3.82GiB
+deploy-openemr-1|79.61%|471.4MiB / 3.82GiB
+T=1783653922
+deploy-agent-1|10.31%|220.5MiB / 3.82GiB
+deploy-openemr-1|75.81%|498.6MiB / 3.82GiB
+T=1783653924
+deploy-agent-1|29.60%|221.9MiB / 3.82GiB
+deploy-openemr-1|74.44%|524.7MiB / 3.82GiB
+T=1783653926
+deploy-agent-1|9.65%|222.2MiB / 3.82GiB
+deploy-openemr-1|88.79%|553.6MiB / 3.82GiB
+T=1783653928
+deploy-agent-1|15.26%|223.1MiB / 3.82GiB
+deploy-openemr-1|81.27%|582.2MiB / 3.82GiB
+T=1783653931
+deploy-agent-1|16.50%|223.6MiB / 3.82GiB
+deploy-openemr-1|76.88%|603.7MiB / 3.82GiB
+T=1783653933
+deploy-agent-1|14.58%|223.9MiB / 3.82GiB
+deploy-openemr-1|77.44%|627.1MiB / 3.82GiB
+T=1783653935
+deploy-agent-1|28.48%|226.4MiB / 3.82GiB
+deploy-openemr-1|60.11%|643MiB / 3.82GiB
+T=1783653937
+deploy-agent-1|18.88%|227.3MiB / 3.82GiB
+deploy-openemr-1|66.89%|662.9MiB / 3.82GiB
+T=1783653939
+deploy-agent-1|25.92%|230.1MiB / 3.82GiB
+deploy-openemr-1|83.45%|680MiB / 3.82GiB
+T=1783653941
+deploy-agent-1|7.28%|230.5MiB / 3.82GiB
+deploy-openemr-1|103.07%|697.3MiB / 3.82GiB
+T=1783653943
+deploy-agent-1|8.20%|230.5MiB / 3.82GiB
+deploy-openemr-1|115.53%|720.7MiB / 3.82GiB
+T=1783653945
+deploy-agent-1|8.88%|230.4MiB / 3.82GiB
+deploy-openemr-1|109.59%|739.5MiB / 3.82GiB
+T=1783653947
+deploy-agent-1|7.58%|230.3MiB / 3.82GiB
+deploy-openemr-1|88.20%|761.6MiB / 3.82GiB
+T=1783653949
+deploy-agent-1|6.97%|229.9MiB / 3.82GiB
+deploy-openemr-1|35.70%|762.8MiB / 3.82GiB
+T=1783653951
+deploy-agent-1|2.80%|229.5MiB / 3.82GiB
+deploy-openemr-1|5.40%|756.2MiB / 3.82GiB
+T=1783653953
+deploy-agent-1|7.94%|229.3MiB / 3.82GiB
+deploy-openemr-1|5.48%|748.6MiB / 3.82GiB
+T=1783653955
+deploy-agent-1|21.03%|230.4MiB / 3.82GiB
+deploy-openemr-1|4.83%|742.4MiB / 3.82GiB
+T=1783653957
+deploy-agent-1|0.15%|230.5MiB / 3.82GiB
+deploy-openemr-1|5.18%|735.8MiB / 3.82GiB
+T=1783653959
+deploy-agent-1|0.15%|230.4MiB / 3.82GiB
+deploy-openemr-1|5.85%|729MiB / 3.82GiB
+T=1783653961
+deploy-agent-1|0.25%|230.4MiB / 3.82GiB
+deploy-openemr-1|4.91%|725.1MiB / 3.82GiB
+T=1783653963
+deploy-agent-1|0.13%|230.4MiB / 3.82GiB
+deploy-openemr-1|5.28%|717.1MiB / 3.82GiB
+T=1783653965
+deploy-agent-1|0.14%|230.4MiB / 3.82GiB
+deploy-openemr-1|4.96%|709.5MiB / 3.82GiB
+T=1783653967
+deploy-agent-1|0.08%|230.4MiB / 3.82GiB
+deploy-openemr-1|5.12%|701.4MiB / 3.82GiB
+T=1783653969
+deploy-agent-1|0.12%|230.4MiB / 3.82GiB
+deploy-openemr-1|4.60%|693.4MiB / 3.82GiB
+T=1783653971
+deploy-agent-1|0.23%|230.4MiB / 3.82GiB
+deploy-openemr-1|4.67%|688.9MiB / 3.82GiB
+T=1783653974
+deploy-agent-1|0.07%|230.4MiB / 3.82GiB
+deploy-openemr-1|4.65%|681MiB / 3.82GiB
+T=1783653976
+deploy-agent-1|0.12%|230.4MiB / 3.82GiB
+deploy-openemr-1|5.11%|673.3MiB / 3.82GiB
+T=1783653978
+deploy-agent-1|0.14%|230.4MiB / 3.82GiB
+deploy-openemr-1|5.09%|668.6MiB / 3.82GiB
+T=1783653980
+deploy-agent-1|13.24%|183.8MiB / 3.82GiB
+deploy-openemr-1|4.77%|661.5MiB / 3.82GiB
+T=1783653982
+deploy-agent-1|0.05%|178.3MiB / 3.82GiB
+deploy-openemr-1|9.24%|655.3MiB / 3.82GiB
+T=1783653984
+deploy-agent-1|0.06%|178.3MiB / 3.82GiB
+deploy-openemr-1|5.04%|647.1MiB / 3.82GiB
+T=1783653986
+deploy-agent-1|21.61%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.91%|639MiB / 3.82GiB
+T=1783653988
+deploy-agent-1|0.07%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.66%|631.8MiB / 3.82GiB
+T=1783653990
+deploy-agent-1|0.12%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.60%|622.5MiB / 3.82GiB
+T=1783653992
+deploy-agent-1|0.06%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.54%|615MiB / 3.82GiB
+T=1783653994
+deploy-agent-1|0.14%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.50%|607.1MiB / 3.82GiB
+T=1783653996
+deploy-agent-1|0.08%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.01%|602.3MiB / 3.82GiB
+T=1783653998
+deploy-agent-1|0.13%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.49%|594.8MiB / 3.82GiB
+T=1783654000
+deploy-agent-1|0.07%|178.3MiB / 3.82GiB
+deploy-openemr-1|81.36%|630.1MiB / 3.82GiB
+T=1783654002
+deploy-agent-1|0.11%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.11%|581.8MiB / 3.82GiB
+T=1783654004
+deploy-agent-1|0.13%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.38%|575.3MiB / 3.82GiB
+T=1783654006
+deploy-agent-1|0.11%|178.3MiB / 3.82GiB
+deploy-openemr-1|5.06%|568.1MiB / 3.82GiB
+T=1783654008
+deploy-agent-1|0.15%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.25%|555.2MiB / 3.82GiB
+T=1783654010
+deploy-agent-1|0.05%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.07%|546.8MiB / 3.82GiB
+T=1783654012
+deploy-agent-1|0.18%|178.3MiB / 3.82GiB
+deploy-openemr-1|4.34%|542.1MiB / 3.82GiB
+T=1783654014
+deploy-agent-1|0.33%|178.3MiB / 3.82GiB
+deploy-openemr-1|3.89%|535.1MiB / 3.82GiB
+T=1783654016
+deploy-agent-1|20.11%|178.4MiB / 3.82GiB
+deploy-openemr-1|4.46%|527.8MiB / 3.82GiB
+T=1783654018
+deploy-agent-1|0.06%|178.4MiB / 3.82GiB
+deploy-openemr-1|4.50%|521.2MiB / 3.82GiB
+T=1783654020
+deploy-agent-1|0.16%|178.4MiB / 3.82GiB
+deploy-openemr-1|4.79%|513.3MiB / 3.82GiB
+T=1783654022
+deploy-agent-1|0.05%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.81%|511.8MiB / 3.82GiB
+T=1783654024
+deploy-agent-1|0.06%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.90%|503.2MiB / 3.82GiB
+T=1783654027
+deploy-agent-1|0.12%|178.4MiB / 3.82GiB
+deploy-openemr-1|4.11%|495.2MiB / 3.82GiB
+T=1783654029
+deploy-agent-1|0.10%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.40%|493.8MiB / 3.82GiB
+T=1783654031
+deploy-agent-1|0.09%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.94%|488.8MiB / 3.82GiB
+T=1783654033
+deploy-agent-1|0.11%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.73%|484MiB / 3.82GiB
+T=1783654035
+deploy-agent-1|0.06%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.85%|479.6MiB / 3.82GiB
+T=1783654037
+deploy-agent-1|0.07%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.94%|472.4MiB / 3.82GiB
+T=1783654039
+deploy-agent-1|0.15%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.90%|471MiB / 3.82GiB
+T=1783654041
+deploy-agent-1|0.09%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.53%|469.6MiB / 3.82GiB
+T=1783654043
+deploy-agent-1|0.07%|178.4MiB / 3.82GiB
+deploy-openemr-1|14.11%|467.8MiB / 3.82GiB
+T=1783654045
+deploy-agent-1|0.06%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.56%|462.9MiB / 3.82GiB
+T=1783654047
+deploy-agent-1|18.49%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.80%|454.3MiB / 3.82GiB
+T=1783654049
+deploy-agent-1|0.14%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.57%|446.9MiB / 3.82GiB
+T=1783654051
+deploy-agent-1|0.13%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.26%|438.8MiB / 3.82GiB
+T=1783654053
+deploy-agent-1|0.06%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.72%|430.5MiB / 3.82GiB
+T=1783654055
+deploy-agent-1|0.17%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.22%|422.2MiB / 3.82GiB
+T=1783654057
+deploy-agent-1|0.10%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.56%|414.3MiB / 3.82GiB
+T=1783654059
+deploy-agent-1|0.14%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.22%|406.6MiB / 3.82GiB
+T=1783654061
+deploy-agent-1|0.90%|180.4MiB / 3.82GiB
+deploy-openemr-1|19.14%|398.4MiB / 3.82GiB
+T=1783654063
+deploy-agent-1|0.10%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.64%|390.2MiB / 3.82GiB
+T=1783654065
+deploy-agent-1|0.14%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.89%|381.9MiB / 3.82GiB
+T=1783654067
+deploy-agent-1|0.13%|178.4MiB / 3.82GiB
+deploy-openemr-1|4.69%|374.8MiB / 3.82GiB
+T=1783654069
+deploy-agent-1|0.12%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.35%|362.5MiB / 3.82GiB
+T=1783654071
+deploy-agent-1|0.06%|178.4MiB / 3.82GiB
+deploy-openemr-1|2.88%|353.8MiB / 3.82GiB
+T=1783654073
+deploy-agent-1|0.07%|178.4MiB / 3.82GiB
+deploy-openemr-1|3.17%|346.4MiB / 3.82GiB
+T=1783654075
+deploy-agent-1|0.06%|178.4MiB / 3.82GiB
+deploy-openemr-1|0.40%|342.3MiB / 3.82GiB
+T=1783654077
+deploy-agent-1|13.77%|178.5MiB / 3.82GiB
+deploy-openemr-1|0.38%|342.2MiB / 3.82GiB
+T=1783654079
+deploy-agent-1|0.14%|178.5MiB / 3.82GiB
+deploy-openemr-1|0.45%|342.2MiB / 3.82GiB
+T=1783654082
+deploy-agent-1|0.14%|178.5MiB / 3.82GiB
+deploy-openemr-1|0.45%|342.8MiB / 3.82GiB
+T=1783654084

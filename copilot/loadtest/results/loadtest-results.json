@@ -1,0 +1,74 @@
+{
+  "target": "https://copilot.203-0-113-10.sslip.io/chat",
+  "runIso": "2026-07-10",
+  "grounding": "on (prod config: Sonnet generation + Haiku grounding judge per claim)",
+  "patientsRotated": 7,
+  "questionMix": [
+    "Who is this patient? Give name and date of birth.",
+    "What medications is she on?",
+    "Does she have any allergies?",
+    "Anything else I should know before her visit?"
+  ],
+  "reqTimeoutMs": 120000,
+  "levels": [
+    {
+      "concurrency": 10,
+      "requests": 100,
+      "successes": 100,
+      "failures": 0,
+      "errorRatePct": 0,
+      "errorBreakdown": {},
+      "wallSeconds": 72.9,
+      "throughputRps": 1.37,
+      "latencyMs": {
+        "p50": 5969,
+        "p95": 10166,
+        "p99": 12267,
+        "min": 2651,
+        "max": 14993,
+        "mean": 6583
+      },
+      "note": "latency percentiles computed over SUCCESSFUL requests only; error rate captures the rest"
+    },
+    {
+      "concurrency": 50,
+      "requests": 100,
+      "successes": 27,
+      "failures": 73,
+      "errorRatePct": 73,
+      "errorBreakdown": {
+        "http_5xx": 73
+      },
+      "wallSeconds": 46.1,
+      "throughputRps": 2.17,
+      "latencyMs": {
+        "p50": 19914,
+        "p95": 31666,
+        "p99": 33976,
+        "min": 5724,
+        "max": 33976,
+        "mean": 19524
+      },
+      "note": "latency percentiles computed over SUCCESSFUL requests only; error rate captures the rest"
+    }
+  ],
+  "baselinesUnderLoad": {
+    "source": "docker stats sampled on the droplet during the run (see docker-stats-during-load.txt), 96 samples",
+    "containers": {
+      "deploy-agent-1 (Node/Fastify agent)": {
+        "cpuPctPeak": 46.5,
+        "cpuPctMean": 10.4,
+        "memMbPeak": 230.5,
+        "memMbMean": 197.7
+      },
+      "deploy-openemr-1 (PHP/Apache + FHIR)": {
+        "cpuPctPeak": 115.5,
+        "cpuPctMean": 37.6,
+        "memMbPeak": 762.8,
+        "memMbMean": 514.3
+      }
+    },
+    "droplet": "single DigitalOcean VM (also runs MariaDB, Redis, Langfuse, Caddy)"
+  },
+  "rootCauseAt50c": "All 73 failures were HTTP 500 = OpenEmrFhirError (OpenEMR FHIR API returned 500), NOT LLM rate limits. The agent assembles context by fanning out 5 FHIR reads per /chat in Promise.all; 50 concurrent chats => ~250 concurrent FHIR calls saturating OpenEMR PHP/MariaDB (peaked >1 core). Two amplifiers: (1) no Patient Snapshot cache yet (ARCHITECTURE.md 3) so every turn re-reads all 5 resources; (2) Promise.all has no per-tool isolation, so one FHIR 500 rejects the whole request instead of degrading."
+}

@@ -1,0 +1,96 @@
+{
+  "docType": "intake_form",
+  "demographics": {
+    "name": "Susan Underwood",
+    "dob": "03/14/1958",
+    "sex": "Female",
+    "phone": "(512) 555-0148",
+    "address": "482 Elm St, Austin, TX 78701"
+  },
+  "chiefConcern": "Follow-up for type 2 diabetes; reports increased fatigue and occasional blurred vision over the past month.",
+  "currentMedications": [
+    {
+      "name": "Metformin",
+      "dose": "1000 mg twice daily",
+      "confidence": 0.96,
+      "citation": {
+        "sourceType": "intake_form",
+        "sourceId": "fixture-susan-intake-form",
+        "pageOrSection": "Current Medications",
+        "fieldOrChunkId": "med-0",
+        "quoteOrValue": "Metformin 1000 mg twice daily"
+      }
+    },
+    {
+      "name": "Lisinopril",
+      "dose": "20 mg daily",
+      "confidence": 0.95,
+      "citation": {
+        "sourceType": "intake_form",
+        "sourceId": "fixture-susan-intake-form",
+        "pageOrSection": "Current Medications",
+        "fieldOrChunkId": "med-1",
+        "quoteOrValue": "Lisinopril 20 mg daily"
+      }
+    },
+    {
+      "name": "Atorvastatin",
+      "dose": "40 mg daily",
+      "confidence": 0.94,
+      "citation": {
+        "sourceType": "intake_form",
+        "sourceId": "fixture-susan-intake-form",
+        "pageOrSection": "Current Medications",
+        "fieldOrChunkId": "med-2",
+        "quoteOrValue": "Atorvastatin 40 mg daily"
+      }
+    }
+  ],
+  "allergies": [
+    {
+      "substance": "Penicillin",
+      "reaction": "rash",
+      "confidence": 0.92,
+      "citation": {
+        "sourceType": "intake_form",
+        "sourceId": "fixture-susan-intake-form",
+        "pageOrSection": "Allergies",
+        "fieldOrChunkId": "allergy-0",
+        "quoteOrValue": "Penicillin — rash"
+      }
+    }
+  ],
+  "familyHistory": [
+    {
+      "condition": "Type 2 diabetes",
+      "relation": "father",
+      "confidence": 0.9,
+      "citation": {
+        "sourceType": "intake_form",
+        "sourceId": "fixture-susan-intake-form",
+        "pageOrSection": "Family History",
+        "fieldOrChunkId": "fh-0",
+        "quoteOrValue": "Father — Type 2 diabetes"
+      }
+    },
+    {
+      "condition": "Hypertension",
+      "relation": "mother",
+      "confidence": 0.9,
+      "citation": {
+        "sourceType": "intake_form",
+        "sourceId": "fixture-susan-intake-form",
+        "pageOrSection": "Family History",
+        "fieldOrChunkId": "fh-1",
+        "quoteOrValue": "Mother — Hypertension"
+      }
+    }
+  ],
+  "citation": {
+    "sourceType": "intake_form",
+    "sourceId": "fixture-susan-intake-form",
+    "pageOrSection": "Intake Form",
+    "fieldOrChunkId": "document",
+    "quoteOrValue": "Patient Intake Form — Susan Underwood"
+  }
+}

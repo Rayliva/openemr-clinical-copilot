@@ -1,0 +1,117 @@
+15:18:05
+deploy-agent-1  CPU 0.15%  MEM 163.2MiB / 3.82GiB
+deploy-langfuse-1  CPU 0.02%  MEM 148.3MiB / 3.82GiB
+deploy-caddy-1  CPU 0.00%  MEM 23.36MiB / 3.82GiB
+deploy-openemr-1  CPU 0.40%  MEM 219.3MiB / 3.82GiB
+deploy-redis-1  CPU 0.81%  MEM 5.867MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 0.00%  MEM 67.29MiB / 3.82GiB
+deploy-mysql-1  CPU 0.01%  MEM 272.7MiB / 3.82GiB
+---
+15:18:11
+deploy-agent-1  CPU 0.18%  MEM 163.2MiB / 3.82GiB
+deploy-langfuse-1  CPU 0.00%  MEM 148.3MiB / 3.82GiB
+deploy-caddy-1  CPU 0.04%  MEM 23.36MiB / 3.82GiB
+deploy-openemr-1  CPU 0.37%  MEM 219.3MiB / 3.82GiB
+deploy-redis-1  CPU 0.79%  MEM 5.867MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 0.00%  MEM 67.29MiB / 3.82GiB
+deploy-mysql-1  CPU 0.01%  MEM 272.7MiB / 3.82GiB
+---
+15:18:18
+deploy-agent-1  CPU 23.40%  MEM 163.2MiB / 3.82GiB
+deploy-langfuse-1  CPU 0.00%  MEM 148.3MiB / 3.82GiB
+deploy-caddy-1  CPU 0.00%  MEM 23.36MiB / 3.82GiB
+deploy-openemr-1  CPU 88.68%  MEM 260.2MiB / 3.82GiB
+deploy-redis-1  CPU 0.72%  MEM 5.863MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 0.00%  MEM 67.3MiB / 3.82GiB
+deploy-mysql-1  CPU 5.71%  MEM 272.8MiB / 3.82GiB
+---
+15:18:24
+deploy-agent-1  CPU 44.76%  MEM 166.9MiB / 3.82GiB
+deploy-langfuse-1  CPU 77.84%  MEM 154.8MiB / 3.82GiB
+deploy-caddy-1  CPU 4.64%  MEM 27.01MiB / 3.82GiB
+deploy-openemr-1  CPU 28.50%  MEM 237MiB / 3.82GiB
+deploy-redis-1  CPU 0.72%  MEM 5.863MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 2.23%  MEM 65.87MiB / 3.82GiB
+deploy-mysql-1  CPU 7.19%  MEM 273.3MiB / 3.82GiB
+---
+15:18:30
+deploy-agent-1  CPU 38.69%  MEM 178.3MiB / 3.82GiB
+deploy-langfuse-1  CPU 47.32%  MEM 161.8MiB / 3.82GiB
+deploy-caddy-1  CPU 2.85%  MEM 32.11MiB / 3.82GiB
+deploy-openemr-1  CPU 53.91%  MEM 334.7MiB / 3.82GiB
+deploy-redis-1  CPU 0.64%  MEM 5.867MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 3.38%  MEM 63.84MiB / 3.82GiB
+deploy-mysql-1  CPU 49.97%  MEM 277.4MiB / 3.82GiB
+---
+15:18:37
+deploy-agent-1  CPU 32.14%  MEM 188.5MiB / 3.82GiB
+deploy-langfuse-1  CPU 47.20%  MEM 179.1MiB / 3.82GiB
+deploy-caddy-1  CPU 2.79%  MEM 32.23MiB / 3.82GiB
+deploy-openemr-1  CPU 47.21%  MEM 326.2MiB / 3.82GiB
+deploy-redis-1  CPU 0.67%  MEM 5.867MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 7.63%  MEM 67.82MiB / 3.82GiB
+deploy-mysql-1  CPU 62.96%  MEM 280MiB / 3.82GiB
+---
+15:18:43
+deploy-agent-1  CPU 20.98%  MEM 198.2MiB / 3.82GiB
+deploy-langfuse-1  CPU 58.27%  MEM 186.3MiB / 3.82GiB
+deploy-caddy-1  CPU 1.77%  MEM 32.32MiB / 3.82GiB
+deploy-openemr-1  CPU 41.71%  MEM 334.1MiB / 3.82GiB
+deploy-redis-1  CPU 0.71%  MEM 5.848MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 8.72%  MEM 66.61MiB / 3.82GiB
+deploy-mysql-1  CPU 68.60%  MEM 280.7MiB / 3.82GiB
+---
+15:18:49
+deploy-agent-1  CPU 20.42%  MEM 209MiB / 3.82GiB
+deploy-langfuse-1  CPU 54.85%  MEM 191.2MiB / 3.82GiB
+deploy-caddy-1  CPU 3.29%  MEM 30.85MiB / 3.82GiB
+deploy-openemr-1  CPU 45.72%  MEM 349.1MiB / 3.82GiB
+deploy-redis-1  CPU 0.74%  MEM 5.863MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 9.30%  MEM 67.31MiB / 3.82GiB
+deploy-mysql-1  CPU 54.08%  MEM 281.5MiB / 3.82GiB
+---
+15:18:56
+deploy-agent-1  CPU 2.66%  MEM 202.6MiB / 3.82GiB
+deploy-langfuse-1  CPU 155.53%  MEM 209.5MiB / 3.82GiB
+deploy-caddy-1  CPU 0.14%  MEM 30.64MiB / 3.82GiB
+deploy-openemr-1  CPU 3.63%  MEM 324.4MiB / 3.82GiB
+deploy-redis-1  CPU 0.79%  MEM 5.863MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 18.24%  MEM 67.68MiB / 3.82GiB
+deploy-mysql-1  CPU 0.05%  MEM 281.4MiB / 3.82GiB
+---
+15:19:02
+deploy-agent-1  CPU 4.01%  MEM 202.7MiB / 3.82GiB
+deploy-langfuse-1  CPU 162.33%  MEM 212MiB / 3.82GiB
+deploy-caddy-1  CPU 0.00%  MEM 30.62MiB / 3.82GiB
+deploy-openemr-1  CPU 5.12%  MEM 299.1MiB / 3.82GiB
+deploy-redis-1  CPU 0.82%  MEM 5.863MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 18.75%  MEM 67.96MiB / 3.82GiB
+deploy-mysql-1  CPU 0.04%  MEM 281.4MiB / 3.82GiB
+---
+15:19:09
+deploy-agent-1  CPU 3.68%  MEM 204.4MiB / 3.82GiB
+deploy-langfuse-1  CPU 157.81%  MEM 210.1MiB / 3.82GiB
+deploy-caddy-1  CPU 0.00%  MEM 30.62MiB / 3.82GiB
+deploy-openemr-1  CPU 3.99%  MEM 269.3MiB / 3.82GiB
+deploy-redis-1  CPU 0.81%  MEM 5.863MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 17.87%  MEM 67.98MiB / 3.82GiB
+deploy-mysql-1  CPU 0.03%  MEM 281.4MiB / 3.82GiB
+---
+15:19:15
+deploy-agent-1  CPU 0.25%  MEM 204.3MiB / 3.82GiB
+deploy-langfuse-1  CPU 0.03%  MEM 209.7MiB / 3.82GiB
+deploy-caddy-1  CPU 0.00%  MEM 30.62MiB / 3.82GiB
+deploy-openemr-1  CPU 3.20%  MEM 242.2MiB / 3.82GiB
+deploy-redis-1  CPU 0.74%  MEM 5.867MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 0.03%  MEM 67.99MiB / 3.82GiB
+deploy-mysql-1  CPU 0.03%  MEM 281.4MiB / 3.82GiB
+---
+15:19:21
+deploy-agent-1  CPU 0.66%  MEM 204.3MiB / 3.82GiB
+deploy-langfuse-1  CPU 4.31%  MEM 209.7MiB / 3.82GiB
+deploy-caddy-1  CPU 0.20%  MEM 30.63MiB / 3.82GiB
+deploy-openemr-1  CPU 3.43%  MEM 222.1MiB / 3.82GiB
+deploy-redis-1  CPU 0.74%  MEM 5.867MiB / 3.82GiB
+deploy-langfuse-db-1  CPU 0.35%  MEM 67.99MiB / 3.82GiB
+deploy-mysql-1  CPU 4.57%  MEM 281.5MiB / 3.82GiB
+---

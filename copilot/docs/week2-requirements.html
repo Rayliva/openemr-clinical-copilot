@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clinical Co-Pilot — Week 2 Requirements Tracker</title>
+<style>
+  :root {
+    --bg: #f6f8fb;
+    --panel: #ffffff;
+    --ink: #1c2430;
+    --muted: #5c6773;
+    --line: #e2e8f0;
+    --accent: #2f6fed;
+    --accent-soft: #eaf1fe;
+    --green: #1f9d55;
+    --green-bg: #e6f6ec;
+    --amber: #c77700;
+    --amber-bg: #fdf1dc;
+    --red: #d13b3b;
+    --red-bg: #fbe6e6;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1117;
+      --panel: #161b22;
+      --ink: #e6edf3;
+      --muted: #9198a1;
+      --line: #262d36;
+      --accent: #4d8bff;
+      --accent-soft: #16233d;
+      --green: #3fb972;
+      --green-bg: #12261a;
+      --amber: #e0a53a;
+      --amber-bg: #2a2110;
+      --red: #f0716f;
+      --red-bg: #2c1516;
+      --shadow: 0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  a { color: var(--accent); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  header.page {
+    position: sticky; top: 0; z-index: 5;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 0;
+    margin-bottom: 24px;
+  }
+  header.page .inner { max-width: 1080px; margin: 0 auto; padding: 0 20px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+  .brand h1 { font-size: 18px; margin: 0; letter-spacing: -.2px; }
+  .brand p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+  .meta { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .meta .stat { text-align: right; }
+  .meta .stat b { font-size: 18px; }
+  .meta .stat span { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+  .bar { height: 10px; border-radius: 6px; background: var(--line); overflow: hidden; display: flex; min-width: 220px; }
+  .bar i { display: block; height: 100%; }
+  .bar i.g { background: var(--green); }
+  .bar i.a { background: var(--amber); }
+  .bar i.r { background: var(--red); }
+
+  .callout { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); border-radius: 12px; padding: 14px 16px; margin: 0 0 18px; display: flex; gap: 12px; }
+  .callout .tag { font-size: 11px; font-weight: 700; letter-spacing: .5px; color: var(--accent); text-transform: uppercase; white-space: nowrap; padding-top: 1px; }
+  .callout p { margin: 0; font-size: 13.5px; }
+  .callout.warn { background: var(--red-bg); border-color: color-mix(in srgb, var(--red) 35%, var(--line)); }
+  .callout.warn .tag { color: var(--red); }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin: 8px 0 24px; font-size: 13px; color: var(--muted); }
+  .legend .pill { margin-right: 4px; }
+
+  .checkpoints { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0 0 26px; }
+  .cp { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); }
+  .cp b { display: block; font-size: 13px; }
+  .cp span { font-size: 12px; color: var(--muted); }
+  .cp.final { border-color: var(--accent); }
+
+  section.group { margin: 0 0 30px; }
+  .group > h2 { font-size: 15px; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; }
+  .group > h2 .count { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .group > .sub { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+
+  .grid { display: grid; gap: 10px; }
+  .req {
+    background: var(--panel); border: 1px solid var(--line); border-left-width: 4px;
+    border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow);
+    display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: start;
+  }
+  .req[data-status="green"] { border-left-color: var(--green); }
+  .req[data-status="amber"] { border-left-color: var(--amber); }
+  .req[data-status="red"]   { border-left-color: var(--red); }
+  .req .title { font-weight: 600; font-size: 14px; grid-column: 1; }
+  .req .title .code { color: var(--muted); font-weight: 600; margin-right: 6px; }
+  .req .desc { grid-column: 1; color: var(--muted); font-size: 13px; margin: 0; }
+  .req .note { grid-column: 1 / -1; font-size: 12.5px; margin: 4px 0 0; padding: 8px 10px; background: var(--bg); border-radius: 8px; }
+  .req .note b { color: var(--ink); }
+  .req .tags { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+  .req .tags .t { font-size: 10.5px; letter-spacing: .3px; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 20px; padding: 1px 8px; }
+  .req .tags .t.stretch { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+  .req .tags .t.gate { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, var(--line)); }
+
+  .pill { grid-column: 2; grid-row: 1; justify-self: end; font-size: 11px; font-weight: 700; letter-spacing: .3px; border-radius: 20px; padding: 3px 10px; white-space: nowrap; }
+  .pill.green { color: var(--green); background: var(--green-bg); }
+  .pill.amber { color: var(--amber); background: var(--amber-bg); }
+  .pill.red   { color: var(--red); background: var(--red-bg); }
+
+  .pitfalls { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px 18px; box-shadow: var(--shadow); }
+  .pitfalls li { font-size: 13px; margin: 8px 0; color: var(--muted); }
+
+  footer.page { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+  footer.page h3 { color: var(--ink); font-size: 13px; margin: 16px 0 6px; }
+  footer.page code { background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; font-size: 12px; }
+</style>
+</head>
+<body>
+<header class="page">
+  <div class="inner">
+    <div class="brand">
+      <h1>Clinical Co-Pilot — Week 2 Requirements</h1>
+      <p>Multimodal Evidence Agent · AgentForge · source: <code>Week_2_AgentForge.pdf</code></p>
+    </div>
+    <div class="meta">
+      <div class="bar" id="overallBar" title="Green / Amber / Red across all scored requirements"></div>
+      <div class="stat"><b id="pctDone">0%</b><span>complete</span></div>
+      <div class="stat"><b id="counts">0 / 0 / 0</b><span>done / partial / todo</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="callout">
+    <span class="tag">Gate</span>
+    <p>Eval-driven CI is non-negotiable. A working demo that cannot block regressions has not met the Week 2 standard.</p>
+  </div>
+  <div class="callout warn">
+    <span class="tag">Hard gate</span>
+    <p>During grading, a small regression will be introduced to confirm the CI gate <b>fails</b>. If the eval gate does not block the regression, the Week 2 build does not pass.</p>
+  </div>
+
+  <div class="legend">
+    <span><span class="pill green">Green</span> completed &amp; verified</span>
+    <span><span class="pill amber">Amber</span> in progress / Week&nbsp;1 foundation exists</span>
+    <span><span class="pill red">Red</span> not started</span>
+    <span style="margin-left:auto">Last updated <b id="updated">2026-07-17</b></span>
+  </div>
+
+  <div class="checkpoints">
+    <div class="cp"><b>Architecture Defense</b><span>+4 hours</span></div>
+    <div class="cp"><b>MVP</b><span>Tue · 11:59 PM CT</span></div>
+    <div class="cp"><b>Early Submission</b><span>Thu · 11:59 PM CT</span></div>
+    <div class="cp final"><b>Final</b><span>Sun · Noon CT</span></div>
+  </div>
+
+  <!-- ============ MVP (overview, not double-counted) ============ -->
+  <section class="group">
+    <h2>MVP Requirements <span class="count">at-a-glance — detailed status in the sections below</span></h2>
+    <p class="sub">A controlled expansion of the Week 1 agent into two document types, two workers, and one regression gate. These five restate items scored in detail below, so they are shown here for orientation and not counted in the totals.</p>
+    <div class="grid">
+      <div class="req" data-status="green" data-count="false">
+        <div class="title">Ingest two document types</div>
+        <p class="desc">Upload and extract a lab PDF and an intake form using strict schemas.</p>
+      </div>
+      <div class="req" data-status="green" data-count="false">
+        <div class="title">Build basic hybrid RAG</div>
+        <p class="desc">Small guideline corpus indexed with keyword + dense retrieval and Cohere rerank (or equivalent).</p>
+      </div>
+      <div class="req" data-status="green" data-count="false">
+        <div class="title">Add supervisor + 2 workers</div>
+        <p class="desc">Supervisor routes to intake-extractor and evidence-retriever with logged handoffs.</p>
+      </div>
+      <div class="req" data-status="green" data-count="false">
+        <div class="title">Gate with eval-driven CI</div>
+        <p class="desc">50-case golden set, boolean rubrics, PR-blocking git hook.</p>
+      </div>
+      <div class="req" data-status="green" data-count="false">
+        <div class="title">Integrate and demo</div>
+        <p class="desc">Deployed app, source-grounded UI, latency/cost report, walkthrough video.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DELIVERY STAGES (roadmap, not counted) ============ -->
+  <section class="group">
+    <h2>Delivery Stages <span class="count">roadmap — maps onto the scored requirements below</span></h2>
+    <p class="sub">The narrative build order from the PDF. Shown as a roadmap; each stage's substance is scored under Core Agent Requirements / Submission / Engineering, so stages are not counted in the totals.</p>
+    <div class="grid">
+      <div class="req" data-status="green" data-count="false">
+        <div class="title"><span class="code">Stage 1</span>Ingest lab PDF &amp; intake form</div>
+        <p class="desc">Accept a file, associate it with a patient, store the source doc in OpenEMR, extract structured JSON, link every derived fact back to source.</p>
+      </div>
+      <div class="req" data-status="green" data-count="false">
+        <div class="title"><span class="code">Stage 2</span>Build basic hybrid RAG</div>
+        <p class="desc">Small clinical-guideline corpus, sparse + dense retrieval, rerank candidates, return evidence snippets with source metadata. (You must source the guideline docs yourself.)</p>
+      </div>
+      <div class="req" data-status="green" data-count="false">
+        <div class="title"><span class="code">Stage 3</span>Add supervisor + 2 workers</div>
+        <p class="desc">Small graph: supervisor decides when extraction / evidence retrieval is needed and when the final answer is ready. Explicit handoffs.</p>
+      </div>
+      <div class="req" data-status="green" data-count="false">
+        <div class="title"><span class="code">Stage 4</span>Build the eval gate</div>
+        <p class="desc">50 cases exercising extraction, evidence retrieval, citations, refusals, missing-data. Boolean rubrics. CI fails on meaningful regression.</p>
+      </div>
+      <div class="req" data-status="green" data-count="false">
+        <div class="title"><span class="code">Stage 5</span>Integrate, deploy &amp; defend</div>
+        <p class="desc">Expose the Week 2 flow in the deployed app, capture traces, record a demo, map each capability back to the Week 1 user &amp; workflow.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CORE AGENT REQUIREMENTS (counted) ============ -->
+  <section class="group">
+    <h2>Core Agent Requirements <span class="count">7 — graded</span></h2>
+    <div class="grid">
+      <div class="req" data-status="green">
+        <div class="title"><span class="code">1</span>Document ingestion &amp; extraction</div>
+        <p class="desc"><code>attach_and_extract(patient_id, file_path, doc_type)</code> (or equivalent) supporting <code>lab_pdf</code> and <code>intake_form</code>: store source doc in OpenEMR, return strict-schema JSON, persist derived facts as FHIR/OpenEMR records.</p>
+        <p class="note"><b>Built:</b> the pure <b>extraction engine</b> in <code>@copilot/ingestion</code> — <code>extractLabPdf</code>/<code>extractIntakeForm</code> turn page images into a schema-valid extraction via an <b>injected VLM port</b>; raw VLM output never bypasses the canonical Zod schema; malformed → bounded retry-with-feedback → typed <code>degraded</code> (field flagged), never a silent pass/drop. 7 offline unit tests green (spec <code>docs/specs/w2-vlm-extract.md</code>). <b>Also built:</b> fixtures render to committed <b>source PDF + page-raster PNG</b> (Playwright authoring script), and the <b>Claude-vision adapter</b> <code>createClaudeVlm</code> (<code>apps/agent</code>) implements the <code>VlmExtractPort</code> via <code>@ai-sdk/anthropic</code> <code>generateObject</code> — malformed generation → engine retry/degrade (never crash/bypass), transport errors re-thrown PHI-free. <b>Live-verified:</b> real <code>claude-opus-4-8</code> vision extracted all 8 labs from the PNG correctly (A1c 8.1 high, eGFR 45 low, …), first attempt, 20.6s. <b>OCR box-match wired, offline + live (2026-07-14):</b> engine decided (in-process <code>tesseract.js</code>, not a service — <code>docs/decisions/w2-ocr-engine.md</code>); committed <code>*.ocr.json</code> golden maps + <code>OcrPort</code> + <code>parseOcrMap</code> for CI (round-trip locates <b>all 8</b> lab values, zero live OCR on CI — spec <code>w2-ocr-port-and-maps.md</code>); <b>and the live in-process adapter</b> <code>createTesseractOcr</code> (Slice 2a, spec <code>w2-ocr-live-adapter.md</code>) over an injected recognizer, PHI-free errors, output Zod-gated — <b>live-verified</b>: real tesseract.js OCRs the fixture PNG → 116 words, all 8 values located, matching the golden. <b>PDF→raster built + live-verified (Slice 2b, decision <code>w2-pdf-rasterizer.md</code>):</b> in-process <code>pdfjs-dist</code>+<code>@napi-rs/canvas</code> (mupdf rejected — AGPL) turns an uploaded PDF Binary → page PNGs (bounded: page-count + pixel-area caps + render timeout, PHI-free errors); the full chain PDF→raster→OCR locates all 8 values on the real fixture PDF. <b>Document detection + OAuth doc scopes DONE + LIVE-VERIFIED (Slice 2c, spec <code>w2-document-detection.md</code>):</b> added read-only <code>system/DocumentReference.read</code>+<code>system/Binary.read</code> (re-registered + enabled), pure <code>detectPendingDocuments</code> (parses the FHIR DocumentReference bundle → un-ingested PDFs, idempotent by documentId); verified against a real uploaded doc in the running OpenEMR (found the 1 pending lab PDF; a seed script uploads the fixture). <b>Extraction pipeline built (Slice 2d, spec <code>w2-ingestion-pipeline.md</code>):</b> pure <code>ingestLabDocument</code> stitches fetch→rasterize→VLM-extract(schema-canonical)→OCR box-match → a <b>pending-review draft</b> (discriminated ok|degraded; carries page rasters for the overlay; no chart write). Offline-tested (8/8 located from fixtures; degrade + OCR-empty-forced-review + infra-propagate covered); <b>every boundary independently live-verified against real OpenEMR</b> incl. the Binary fetch (→ raw application/pdf, 51KB). <b>Edge wired + LIVE END-TO-END (Slice 2d-edge):</b> <code>OpenEmrFhirClient.readBinary</code> (raw bytes) + <code>buildIngestionService</code> + a token-bound <code>POST /documents/pending</code> route (fail-closed like <code>/chat</code>; patient from the signed token, read-only, PHI-safe 502). <b>Live-verified against real OpenEMR:</b> minting a Susan token → the endpoint detects the uploaded PDF → Binary fetch → rasterize → <b>real Opus VLM extracts all 8 results</b> (A1c 8.1 high @0.99, …) → OCR-located boxes → returns drafts + page image. 192 agent tests. <b>Review UI BUILT + LIVE-VERIFIED (Slice 2e):</b> module-hosted <code>public/review.php</code> — owned-patient dropdown → mint (ownership-checked) → <code>POST /documents/pending</code> → renders the page raster with the <b>OCR bounding boxes overlaid</b> + a values/flags/confidence/match-state table, row↔box hover-linked; read-only. <b>Verified in the running OpenEMR browser:</b> Susan's lab PDF → all 8 values (A1c 8.1 high @99% located, …) + 8 boxes drawn on the 1224px page at correct positions. <b>Auto-ingest UX built (2026-07-14, plan-reviewed):</b> an in-chart <b>"Review Documents" button + notification dot + modal</b> (shared renderer, injected beside the chat widget) — detect-only <code>GET /documents/status</code> drives the dot, drafts are <b>Redis-cached</b> (extract-once, in-flight lock), and a <b>true upload-time trigger</b> (core <code>DocumentCreatedEvent</code> + module listener → confined <code>system:ingest</code> token → <code>POST /documents/extract</code>) pre-extracts at upload. Token confinement live-verified (system→/extract 202, user→403, system→read 403). <b>BOTH DOC TYPES NOW INGEST END-TO-END (2026-07-14):</b> added <code>ingestIntakeDocument</code> + <code>locateIntakeValues</code> + <code>classifyDocType</code> (<code>@copilot/ingestion</code>, 15 new tests) mirroring the lab pipeline and reusing the same draft shape, and the ingestion service routes each detected doc by type — so intake forms extract → box-match → review through the same UI as labs (was lab-only). <b>WRITE PATH COMPLETE — 2f done + live-verified (2026-07-14):</b> the physician reviews each value with <b>Accept / Discard / edit</b> controls + a <b>Commit</b> button; the module's <code>commit-review</code> endpoint (session + CSRF + row-level ownership re-check + FHIR-id→<code>documents.id</code> resolution) writes each accepted value as a <b>FHIR-visible <code>form_observation</code></b> (<code>ob_type=laboratory</code> → surfaces at <code>GET /fhir/Observation?category=laboratory</code>), <code>derivedFrom</code> the source document, provenance in the record, <b>idempotent</b> (re-commit = no-op), edits recorded <b>physician-corrected</b>. Gates hold: no accept → no write; no citation + not edited → rejected; the sidecar never writes (module commits). <b>Live-verified against the real DB:</b> FHIR-id resolution → write Written → re-commit SkippedDuplicate → 1 row, category=laboratory. Unit-tested (writer gates + parser). <b>Core Req 1 complete.</b></p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title"><span class="code">2</span>Structured schemas</div>
+        <p class="desc">Zod (or equivalent) strict schemas. <b>Lab:</b> test name, value, unit, reference range, collection date, abnormal flag, source citation. <b>Intake:</b> demographics, chief concern, current meds, allergies, family history, source citation.</p>
+        <p class="note"><b>Built:</b> <code>@copilot/ingestion</code> — <code>lab_pdf</code> + <code>intake_form</code> Zod schemas + the machine-readable <code>Citation</code> contract, 35 validation tests green (spec <code>docs/specs/w2-extraction-schemas.md</code>). Absence-aware, string-valued, citation+confidence required per field. <b>Done:</b> now consumed by the live VLM extraction (engine + Opus adapter, live-verified). <b>Minor gap:</b> the snake_case wire form + FHIR persist (persist is the ingestion-write slice).</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title"><span class="code">3</span>Basic hybrid RAG + rerank</div>
+        <p class="desc">Index a small clinical-guideline corpus, retrieve with sparse + dense search, rerank with Cohere Rerank (or equivalent), feed only top grounded evidence to the answer model.</p>
+        <p class="note"><b>Built (pure core):</b> new pkg <code>@copilot/rag</code> — Zod contracts (<code>GuidelineChunk</code>, <code>EvidenceSnippet</code>, kept separate from chart facts), <code>chunkMarkdown</code> (section-split + overlapping windows, stable ids, H1-title excluded so a disclaimer can't surface as evidence), <code>fuseRRF</code>, and the <b>hybrid retrieval core</b> — <code>retrieveEvidence</code> (dense cosine + keyword term-overlap fused via RRF → cited snippets) with a deterministic bag-of-words embedder so retrieval runs <b>offline in CI</b> (real Cohere injected for prod). First real corpus doc committed — <b>Type 2 Diabetes management</b>, curated from public-domain VA/DoD + USPSTF, mapping to Susan's chart; verified retrieval returns the right chunk (metformin→renal-dosing, statin→statin section). Code-reviewed, 17 tests (spec <code>docs/specs/w2-rag.md</code>). <b>Also built:</b> the <b>Cohere embed v3 adapter</b> (thin, Zod-parsed, PHI-free errors, injected fetch) — <b>live-verified</b>: real Cohere embeddings (1024-dim) over the corpus return the right chunk (metformin→renal, statin→statin). <b>And the Cohere rerank v3 adapter</b> + pure <code>rerankEvidence</code> (degrade-on-failure → unreranked fused fallback, never hangs) — <b>live-verified</b>: rerank fixed the ordering (an "intensify therapy" query went from fused #1 = Statin to reranked #1 = Treatment Intensification). <b>The embed→retrieve→rerank RAG stack is complete + live-verified.</b> <b>Now wired</b> as the evidence-retriever worker and <b>live-verified in the widget end-to-end</b> (a guideline question routes to the retriever and returns a cited answer). pgvector is an optional scale/persistence enhancement (the in-memory retriever works now), not a requirement gap.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title"><span class="code">4</span>Supervisor + two workers</div>
+        <p class="desc">Inspectable orchestration (LangGraph or equivalent). Required workers: <b>intake-extractor</b> and <b>evidence-retriever</b>. Critic agent is extension, not core.</p>
+        <p class="note"><b>Foundation:</b> LangGraph.js is already the orchestration framework (orchestrator-only rule). <b>Built:</b> the supervisor's <b>routing-decision contract</b> (typed Zod <code>RouteDecision</code> + pure bounded <code>decideRoute</code>) <b>and the graph is wired</b>: <code>gather → supervisor ⇄ {intake_extractor, evidence_retriever} → generate → verify → grounding → constraints → respond</code>. Code-review confirmed the safety invariants: <code>generate</code> is the only exit from the supervisor⇄worker cycle (no gate bypass), the loop is doubly-bounded (hop cap + already-ran dedupe), a worker failure degrades without losing routed-once accounting, and with no router injected it is answer-identical to W1. Supervisor decision + each handoff traced (Langfuse spans). 16 supervisor/graph tests. Specs <code>docs/specs/w2-supervisor-routing.md</code> + <code>w2-supervisor-graph.md</code>. <b>NOW ACTIVE END-TO-END:</b> the concrete Claude supervisor router (<code>createClaudeSupervisor</code>, typed decision, only offers wired workers) + the <b>evidence-retriever worker body</b> (RAG) are wired in <code>wire.ts</code>/<code>server.ts</code> (corpus indexed at startup via Cohere; gated on <code>COHERE_API_KEY</code>; resilient — RAG-down → chart-only). <b>Live-verified end-to-end:</b> a guideline question routes to <code>evidence_retriever</code> → RAG → a grounded, cited guideline answer; a chart question returns <code>ready</code> and answers from the chart. <b>NOW COMPLETE — both workers wired (2026-07-14):</b> the <b>intake-extractor worker</b> is wired in <code>wire.ts</code> (thin over <code>@copilot/ingestion</code> detection + <code>classifyDocType</code>) and added to the supervisor's routable workers, so the supervisor routes to <b>both</b> required workers — each thin over a pure package, each traced, the safety core always runs, and every path converges on the verification gate (589 workspace tests green). <b>Integrity fix (2026-07-15):</b> the intake-extractor's output was previously <em>discarded</em> — the node awaited the worker and dropped its documents, leaving one worker decorative. Now fixed to mirror the evidence-retriever path: a provenance-tagged <code>IntakeDocument</code> (DocumentReference <code>rowUuid</code>) folds into a <code>documents</code> state channel + the citation/grounding index, and reaches <code>generate</code> in a separate labeled block, so a document claim ("an intake form is on file") passes the citation + grounding gate and absence reports "none on file" (never fabricated). New <code>graph-intake</code> + <code>renderDocuments</code> tests prove discarded-before / present-after. Minor follow-ons: strict child-span nesting + the deterministic cross-namespace citation guard (tracked).</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title"><span class="code">5</span>Citation contract</div>
+        <p class="desc">Every clinical claim carries machine-readable citation <code>{source_type, source_id, page_or_section, field_or_chunk_id, quote_or_value}</code>. A visual PDF bounding-box overlay is required.</p>
+        <p class="note"><b>Foundation:</b> claims already carry provenance <code>{source_table, row_uuid, fetched_at}</code> and pass a citation check (Week 1). The machine-readable <code>Citation</code> shape (page/section, field/chunk id, quote, optional box) ships in <code>@copilot/ingestion</code>. <b>Built:</b> the three-way <b>OCR box-match</b> (<code>locateValue</code>/<code>locateLabResults</code>) — locates an extracted value on the page → tight box / page-level "approximate" / not-found→forced-review; whole-word match so a fabricated value can't read off another number's digits; 11 tests. <b>OCR engine chosen + wired offline (2026-07-14):</b> in-process <code>tesseract.js</code> (decision <code>docs/decisions/w2-ocr-engine.md</code>) produces the word→coordinate map; a build-time script commits <code>*.ocr.json</code> golden maps so box-match runs offline in CI, and the committed-map round-trip locates all 8 lab values (<code>docs/specs/w2-ocr-port-and-maps.md</code>). <b>Visual bounding-box overlay BUILT + LIVE-VERIFIED (Slice 2e, <code>public/review.php</code>):</b> the review surface draws each extracted value's OCR box on the document page image ([0,1]-normalized → percentage-positioned, row↔box hover-linked) — verified in the running OpenEMR (Susan's lab PDF, 8 boxes at correct positions). The full live path upload→extract→boxes runs end-to-end. <b>Chat citations (2026-07-15, <code>d3c2861</code>):</b> the chat <code>done</code> SSE frame now ships machine-readable citations — each <em>grounded</em> claim mapped to the source row uuid(s) backing it (the leak-safe verified set only, never a dropped claim). <b>Chat UI now renders them (2026-07-15, <code>2ff65f0</code>):</b> a "Sources (N)" line under each answer, one badge per distinct source chart-row, hover reveals which grounded claim it backs. Both the document bounding-box overlay AND chat-answer machine-readable citations now render + are verified. <b>5-field shape completed (2026-07-17, <code>w2-citation-completeness</code>):</b> every grounded claim's <code>done</code>-frame citation now carries the canonical snake_case minimum shape <code>{source_type, source_id, page_or_section, field_or_chunk_id, quote_or_value}</code> for <b>chart</b> claims too (was 2/5 — bare <code>{ref,kind}</code>) — chart <code>page_or_section</code> = the OpenEMR source table + <code>quote_or_value</code> = the serialized fact, resolved deterministically from provenance (pure <code>buildClaimCitations</code>/<code>toProvenanceTableIndex</code>, 8 unit + 1 done-frame test). Guideline claims already carried all 5. Optional follow-on: persistent click-to-pin into the chart.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title"><span class="code">6</span>Eval-driven CI gate</div>
+        <p class="desc">50-case golden set + PR-blocking git hook. Boolean categories: <code>schema_valid</code>, <code>citation_present</code>, <code>factually_consistent</code>, <code>safe_refusal</code>, <code>no_phi_in_logs</code>. Build fails if any category regresses &gt;5% or drops below threshold.</p>
+        <p class="tags"><span class="t gate">hard gate</span></p>
+        <p class="note"><b>Done + self-proven (2026-07-14):</b> the full offline gate. <code>@copilot/eval-gate</code> = the pure decision core (<code>scoreCategories</code>/<code>evaluateGate</code>, fails on &gt;5% regression / below-threshold / safety&lt;100%, +guards <code>checkCoverage</code>/<code>validateBaseline</code>). <code>@copilot/eval-harness</code> (built via 3 parallel builders + serial integrator) = 5 deterministic boolean scorers, a deterministic offline stub engine (LLM/VLM/OCR, no live keys), and the <code>runGoldenSet</code> runner. <b>57-case golden set</b> (<code>evals/w2/</code>, past the 50 target — verified on disk 2026-07-17) with a 15-case safety subset (non-owned-pid refusal, absence≠negative, contraindication, duplicate-therapy, drug-interaction, out-of-scope), all schema-validated. Committed <code>baseline.json</code>. <b>The prove-the-red self-test</b> (<code>evals/w2/gate.test.ts</code>): happy run PASSES, <code>injectRegression</code> run FAILS (schema_valid + citation_present + no_phi_in_logs flagged) — baked into the suite so every run re-proves it. <b>Authoritative gate = a pre-push git hook</b> (<code>copilot/scripts/eval-gate.sh</code> + <code>install-git-hooks.sh</code>; the assignment accepts "Git Hook or equivalent"), offline/keyless, verified BOTH ways: clean tree → exit 0 (push allowed); a neutered-citation-check regression → exit 1 (push blocked). Code-reviewed (approve-with-nits; the one modeling bug fixed); 549 workspace tests green. (The GitLab-runner path was considered + dropped to avoid contending with the 4 GB live-demo droplet — `.gitlab-ci.yml` removed.) <b>Gate HARDENED (2026-07-15):</b> <code>factually_consistent</code> + <code>safe_refusal</code> are now <b>real, red-able categories</b> (were effectively always-pass — <code>2aa5575</code>): the stub engine + scorers make a med-list contradiction and an unsafe non-refusal fail deterministically. Added <b>deterministic hallucinated-citation coverage</b> (a claim citing a row that was never retrieved → <code>citation_present</code> red — <code>31058cf</code>) and <b>drug-interaction + duplicate-therapy safety cases</b> to the safety subset (<code>cd2bc00</code>). A <b>separate deterministic PHI static scan</b> (<code>scripts/phi-scan.mjs</code>, self-tested) now also runs first in <code>eval-gate.sh</code> — a logger call that interpolates a variable into its message fails the push (<code>a9bb3a5</code>). All verified: <code>phi-scan --self-test</code> + scan PASS on the clean tree.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title"><span class="code">7</span>Observability &amp; cost tracking</div>
+        <p class="desc">Per encounter: tool sequence, latency by step, token usage, cost estimate, retrieval hits, extraction confidence, eval outcome. No raw PHI in logs.</p>
+        <p class="note"><b>Foundation:</b> self-hosted Langfuse (span/latency/tokens/cost per node), pino structured logs, dashboard, cost analysis (Week 1). <b>Done (2026-07-15):</b> the W2 observability cluster is real and recorded from the real code paths. <code>@copilot/metrics</code> gained three W2 sub-snapshots — <b>ingestion</b> (docs by type, ok/degraded, located-vs-forced-review, extract-to-draft p50/p95; recorded in <code>runDetectAndIngest</code>), <b>retrieval</b> (hits, rerank used-vs-degraded, latency; recorded in a pure <code>runRetrieval</code> used by the evidence-retriever), and <b>supervisor</b> (routing decisions per target, hop-cap hits; recorded in the supervisor node). All three surface on <code>GET /metrics</code> + the <code>/dashboard</code> W2 sections (queue-depth labeled N/A). Three W2 alert rules (<code>extraction_failure_rate</code>, <code>rag_retrieval_latency_p95</code>, <code>supervisor_hop_cap_rate</code>) with runbook responses in <code>docs/oncall.md</code>. W2 structured-log events (<code>ingestion.complete</code>, <code>extraction.field</code>, <code>retrieval.hit</code>/<code>miss</code>, <code>worker.handoff</code>) — correlation-id-tagged, PHI-free, object-context only; vocabulary in <code>docs/specs/w2-observability.md</code>. PHI-safety asserted in tests. ~30 new tests green. <b>Per-encounter completeness closed (2026-07-17, <code>w2-observability §7</code>):</b> the 7-signal per-encounter requirement had two thin spots — now both real: (1) <b>numeric extraction confidence</b> — <code>extraction.field</code> now carries <code>confidenceMin</code>/<code>confidenceMean</code>/<code>fields</code> (the model's own per-field 0–1, aggregated by pure <code>draftConfidence</code>), not just the located/forced-review proxy; (2) <b>per-encounter eval outcome</b> — each <code>chat completed</code> log + trace now carries <code>evalOutcome{schema_valid, citation_present, grounding_ok, no_phi_in_logs}</code>, the <b>deterministic</b> rubric categories evaluated on the live turn (pure <code>evaluateEncounter</code> reusing <code>checkCitations</code>; the two categories needing a golden expectation stay CI-only). Both PHI-free (numbers/booleans); 9 new unit + a log-assertion test.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CORE DELIVERABLES — extras (counted) ============ -->
+  <section class="group">
+    <h2>Additional Core Deliverables <span class="count">2 required + 3 stretch — graded</span></h2>
+    <p class="sub">Beyond the seven core requirements, the PDF's Core Deliverables list adds a required critic agent and click-to-source UI, plus three explicit stretch items.</p>
+    <div class="grid">
+      <div class="req" data-status="green">
+        <div class="title">Critic agent</div>
+        <p class="desc">Rejects uncited claims or unsafe action suggestions.</p>
+        <p class="note"><b>Done (2026-07-16):</b> a distinct <b>critic gate = verification layer 4</b> now runs LAST in the graph (<code>… → grounding → constraints → <b>critic</b> → respond</code>, spec <code>docs/specs/w2-critic.md</code>). It <b>vetoes</b> any surviving claim that is <b>uncited</b> (belt-and-suspenders over layer 1) or is an <b>agent-authored action suggestion</b> — the read-only boundary (UC-4): "start her on X", "I recommend a statin", "increase the dose", "prescribe", "consider starting", "order a …" are withheld, while <b>reporting</b> a therapy ("the guideline recommends a statin", "propranolol 40 mg is on file", "was discontinued in 2014") passes — the deterministic detector keys on the REPORT-vs-DIRECT distinction (imperative/present verb forms, never past "-ed"). <b>Veto-only</b> by construction (<code>W2_ARCHITECTURE §10</code>): it rewrites <code>groundedClaims</code> to the kept subset so the body <em>and</em> the citation contract both exclude withheld claims; the withheld statement is never echoed (count + reason only) and never logged/shipped. If the only claim was a directive → the body degrades honestly + a boundary note ("withheld by the safety critic — surfaces and flags, does not recommend treatment or doses"); the safety findings still surface. Deterministic + offline (in <code>@copilot/verification</code>, a pure <code>critique</code>) so it runs in the eval gate; an optional thin LLM-critic seam (<code>applyLlmVeto</code>, also veto-only, degrade-safe) exists but is unwired by default (no hot-path latency). <b>Proven:</b> 23 unit + 4 end-to-end graph tests (report-vs-direct table, withhold, degrade, veto-only, LLM-failure-degrades) + a new <code>safe_refusal</code> golden case for the action-suggestion boundary; full pre-push gate PASS.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Click-to-source UI + document preview</div>
+        <p class="desc">Click a citation snippet to view its source, with a simple document preview.</p>
+        <p class="note"><b>Built (Slice 2e, <code>public/review.php</code>):</b> a module-hosted document-review surface renders the extracted document's <b>page image as the preview</b> with each value's OCR <b>bounding box overlaid</b>, beside a values table; hovering a row highlights its source box on the page (row↔box link). <b>Live-verified</b> in the running OpenEMR (Susan's lab PDF, 8 boxes). <b>Chat-citation click-to-source BUILT + DEPLOYED (2026-07-15, spec <code>docs/specs/w2-inline-source-viewer.md</code>):</b> the chat now renders cited sources inline — a guideline-backed claim expands to its passage (Slice A, offline-tested, 250 agent tests), and a document-derived lab value gets a "📄 View source document" expander showing the page screenshot with the cited value's bounding box highlighted (Slice B: a read-only module resolver mapping observation→<code>derivedFrom</code> document + the widget overlay reusing <code>/documents/pending</code>). <b>LIVE-VERIFIED on Site B (2026-07-15):</b> guideline half — a "what A1c target" question returns a cited guideline passage (RAG on). Document half — a committed derived lab (A1c 8.1, seeded via the real <code>DerivedObservationWriter</code>) is cited in chat by its observation uuid → the module resolver maps it to its source <code>DocumentReference</code> → <code>/documents/pending</code> returns the page image with the A1c box (<code>match: located</code>). End-to-end data path confirmed; the widget renders it inline (final pixels confirmable in-browser). Fixing this also required bringing Site B's OAuth client to parity with Site A (added the W2 <code>DocumentReference.read</code>+<code>Binary.read</code> read scopes — document ingestion was previously 401 on Site B). <b>Document zoom/pan added (2026-07-15):</b> the page-image preview now supports zoom (+/−/reset, scroll-to-zoom anchored at the cursor, drag-to-pan) and <b>click-a-row-to-zoom-to-its-box</b>, so the physician can actually read the text a box outlines — boxes are [0,1]-normalized so they track the zoom exactly. In the shared renderer <code>review-render.js</code> (both the standalone review page and the in-chart modal); verified via headless Chrome at 100%/384%/click-to-box (box hugs the value at 300%, clearly legible). Spec <code>docs/specs/w2-document-zoom.md</code>. Persistent click-to-pin is a follow-on.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Third document type</div>
+        <p class="desc">Such as a referral fax or medication list.</p>
+        <p class="note"><b>Both named examples now built (2026-07-17).</b> <code>medication_list</code> (pharmacy printout / med-reconciliation) AND <code>referral_fax</code> (referral / consult-request fax) each ingest end-to-end through the shared pipeline / review UI / write path — the PDF asked for "a third document type such as referral fax <em>or</em> medication list"; we ship both (a 3rd and 4th type). <b>referral_fax (spec <code>docs/specs/w2-referral-fax-ingestion.md</code>):</b> new canonical <code>ReferralFaxExtraction</code> Zod schema (referralDate / referringProvider / referredTo / reason / diagnosis, each individually cited + confidence-scored; raw VLM never bypasses it), <code>locateReferralFaxValues</code> (flattens present fields → the shared <code>LocatedLabResult[]</code>, unlocated → forced review, absent → omitted), <code>ingestReferralFaxDocument</code> (mirrors the med-list pipeline), the exhaustive <code>ingestByType</code> + <code>selectExtractionSchema</code> + VLM field-list cases, <code>classifyDocType</code> routing referral/consult titles (checked before intake; space or hyphen), and <code>CitationSourceType</code> gains <code>referral_fax</code>. <b>12 new offline tests</b> (schema incl. cited-field enforcement, classify both-separator + regression, box-match located/forced-review/absent-omit, pipeline ok/degrade/zero-page/empty-OCR/infra). Demo doc rendered: <code>demo-documents/bello-grace-referral-fax.{html,pdf}</code>. → green once deployed + live-verified through the review UI.</p>
+        <p class="note"><b>Built (2026-07-16, code + tests green; deploy pending):</b> <code>medication_list</code> (pharmacy printout / med-reconciliation list) added end-to-end, compounding the existing ingestion machinery (spec <code>docs/specs/w2-medication-list-ingestion.md</code>). New canonical <code>MedicationListExtraction</code> Zod schema (name/dose/frequency/status, each cited; raw VLM never bypasses it), <code>extractMedicationList</code> + VLM field-list + <code>selectExtractionSchema</code> case (exhaustive over <code>DocType</code>), <code>locateMedicationListValues</code> (numbered <code>Medication N</code> keys → no write-path collision; status is display-only, matched off the drug text), <code>ingestMedicationListDocument</code> (mirrors the intake pipeline), routed by <code>classifyDocType</code> → one of three sibling <code>ingest*Document</code> functions (DocType-exhaustive; there is no single named <code>ingestByType</code> switch). <code>classifyDocType</code> routes med-list/pharmacy/"Medication Reconciliation Form" titles (checked before intake; hyphen or space separators via <code>[\s-]+</code>). Same review UI + <code>form_observation</code> write path (unchanged). <b>14 new offline tests</b> (schema, classify, box-match numbering + forced-review, pipeline degrade/empty-OCR/infra) — 128 ingestion + 262 agent green. Demo uploads rendered: <code>demo-documents/{bello-grace,carter-denise}-medication-list.{html,pdf}</code>. → green once deployed + live-verified through the review UI.</p>
+        <p class="tags"><span class="t stretch">stretch</span></p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Lab trend chart widget</div>
+        <p class="desc">Uses extracted Observation data to chart a lab trend.</p>
+        <p class="tags"><span class="t stretch">stretch</span></p>
+        <p class="note"><b>Done + live-verified on both sites (2026-07-17):</b> a read-only lab-trend chart in the floating widget, sourced from the committed extracted <code>Observation</code> data (spec <code>docs/specs/w2-lab-trend-widget.md</code>). <b>Verified end-to-end:</b> Grace Bello seeded with 3 dated lab PDFs → <code>POST /labs/series</code> (minted token) returns 3 clean, correctly-grouped series — Ferritin 11→28→45, Hemoglobin 11.4→12.3→13.1, MCV 78→82→86 across 2026-01-10 / 04-15 / 07-04 — on Site A and Site B. <b>Multi-PDF by design:</b> a new pure <code>buildLabSeries</code> (<code>@copilot/snapshot</code>) reads the union of all <code>category=laboratory</code> Observations — every uploaded lab PDF — and groups them by test (LOINC, else name) across their collection dates, so N PDFs over time become an N-point line automatically; each point keeps its Observation uuid → its own source PDF. New token-bound <code>POST /labs/series</code> route (pid from the signed token, read-only, fail-closed — a deterministic data view, no LLM/gate). Widget: a <b>📈 Trends</b> toggle → test-selector chips + a hand-built inline <b>SVG line chart</b> (no charting lib → self-contained/CSP-safe/deterministic), hover tooltips, honest empty/single-point states ("1 result on file — no trend yet"), and <b>click-a-point → the existing source-document overlay</b> (page image + bounding box, reusing the Slice-B resolver). <b>Age/sex reference band ADDED (2026-07-18, <code>w2-lab-reference-ranges</code>):</b> a pure sourced <code>referenceRangeFor(test,{ageYears,sex})</code> (LOINC-or-name match; ferritin pre/post-menopause + men, hemoglobin/creatinine/HDL by sex, A1c/MCV/LDL/etc. adult; sex-dependent + unknown sex → no band, never guessed) resolves the typical range for THIS patient (age from <code>birthDate</code>, sex from <code>gender</code>, read server-side in the labs reader); the chart draws it as a faint band clipped to the data domain + a cited caption ("Typical Ferritin for premenopausal women: 13–150 ng/mL — general reference · MedlinePlus (NIH)"). Ranges committed as a sourced corpus doc <code>packages/rag/corpus/lab-reference-ranges.md</code> (MedlinePlus/ADA/ACC-AHA/KDIGO) so chat RAG shares the knowledge. Clearly a general reference, not a patient finding (never a gate fact). 11 new unit tests. <b>Zoom/pan unified (2026-07-18):</b> the fullscreen source viewer (trends + chat) now shares the reviewer's <code>attachZoomPan</code> — scroll-to-zoom, drag-pan, double-click, opens focused on the cited box (<code>w2-shared-zoom-pan-viewer</code>). <b>Tests:</b> 6 series-builder + 6 route + an SVG-builder smoke test; full gate PASS. <b>Demo data:</b> 3 dated lab PDFs for Grace Bello (anemia panel improving on iron) + <code>seed_lab_trend.php</code> that uploads each + commits its dated Observations <code>derivedFrom</code> its PDF. → green once deployed + seeded + live-verified.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Contextual retrieval improvements</div>
+        <p class="desc">Better chunking, query rewriting, or domain-specific filters.</p>
+        <p class="tags"><span class="t stretch">stretch</span></p>
+        <p class="note"><b>Done (2026-07-17, <code>w2-contextual-retrieval</code>):</b> deterministic clinical <b>query expansion</b> (the "query rewriting" option) — a pure <code>expandQuery</code> expands a physician's abbreviations/synonyms to the canonical guideline terms (<code>a1c→hemoglobin/hba1c/glycemic</code>, <code>htn→hypertension/blood/pressure</code>, <code>ckd→chronic/kidney/renal/egfr</code>, <code>ldl→cholesterol/lipid/statin</code>, …), scoped to the committed diabetes corpus. Applied to the <b>keyword arm</b> of <code>retrieveEvidence</code> (dense keeps the original query — embedding a synonym blob would dilute the vector); additive (exact matches never regress), offline/deterministic (a curated table, no model call → runs in CI). <b>Recall win proven:</b> a chunk that uses "hypertension" (never "htn") is retrieved for an <code>htn</code> query — impossible on keyword or bag-of-words dense alone. Also already shipping: <b>section-aware overlapping-window chunking</b> (H1 title excluded so a disclaimer can't surface as evidence). 6 tests. Rerank/RRF/corpus unchanged.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SUBMISSION DELIVERABLES (counted) ============ -->
+  <section class="group">
+    <h2>Submission Deliverables <span class="count">8 — graded</span></h2>
+    <div class="grid">
+      <div class="req" data-status="green">
+        <div class="title">GitLab repository</div>
+        <p class="desc">Week 1 fork with Week 2 changes, setup guide, deployed link, and clear environment-variable documentation.</p>
+        <p class="note"><b>Done (2026-07-15):</b> the Week 1 fork now carries all Week 2 changes, and <code>copilot/README.md</code> (commit <code>911c621</code>) has the graded <b>"Week 1 baseline vs Week 2 multimodal"</b> section — a per-capability W1-vs-W2 table (ingestion, hybrid RAG, supervisor/workers, eval gate, write path) — plus a documented <b>W2 env-var</b> block (<code>COHERE_API_KEY</code> with the offline fallback, <code>COPILOT_VLM_MODEL</code>) and links to the W2 tracker, <code>W2_ARCHITECTURE.md</code>, and the privacy audit. Setup guide + deployed link present. (The live click-through / deployed-app grading is tracked on the <em>Deployed application</em> card.)</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Week 2 architecture doc</div>
+        <p class="desc"><code>./W2_ARCHITECTURE.md</code>: document ingestion flow, worker graph, RAG design, eval gate, risks, tradeoffs, testing strategy, and W2 failure modes.</p>
+        <p class="note"><b>Done (2026-07-15):</b> <code>W2_ARCHITECTURE.md</code> was <b>corrected to shipped reality</b> (<code>d7d5637</code>) — in-memory RAG (not pgvector), the pre-push git-hook gate (not a GitLab runner), no agent Postgres — and now carries the two missing sections: <b>§16 Testing strategy</b> (unit / integration-with-fixtures+stubs / eval golden-set / <em>not-tested-and-why</em>, each naming the failure mode it guards) and <b>§17 W2 failure modes &amp; incident response</b> (ingestion failure, schema violation, value-not-on-page, RAG no-results, reranker down, routing error, PHI-leak — each with how-to-spot + recovery), plus §18 risks/tradeoffs. Covers ingestion, worker graph, RAG, eval gate, data model.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Schemas</div>
+        <p class="desc">Zod schemas for <code>lab_pdf</code> and <code>intake_form</code>, including source-citation fields and validation tests.</p>
+        <p class="note"><b>Done:</b> <code>@copilot/ingestion</code> — <code>LabPdfExtraction</code> + <code>IntakeFormExtraction</code> + the machine-readable <code>Citation</code> contract, 35 validation tests green, committed (<code>2396a09</code>). Spec <code>docs/specs/w2-extraction-schemas.md</code>.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Eval dataset</div>
+        <p class="desc">50 synthetic/demo cases with expected behavior, boolean rubrics, judge configuration, and committed results.</p>
+        <p class="note"><b>Done (2026-07-14; recounted 2026-07-17):</b> <b>57 committed W2 golden cases</b> in <code>evals/w2/</code> (chat + ingestion), each schema-validated against the frozen <code>GoldenCaseSchema</code>; boolean rubrics (5 categories, no 1–10); a 15-case tagged safety subset; committed <code>baseline.json</code>. The gate's own test asserts <code>&gt;= 50</code> cases + a non-empty safety subset. Synthetic data only. Reproducible from the repo. (Week 1's 7-case promptfoo set remains for the live suite.)</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">CI evidence</div>
+        <p class="desc">Git hook (or equivalent) that runs the eval suite and blocks regressions.</p>
+        <p class="tags"><span class="t gate">hard gate</span></p>
+        <p class="note"><b>Done + proven (2026-07-14):</b> a committed, installable <b>pre-push git hook</b> — <code>copilot/scripts/eval-gate.sh</code> (offline/keyless: typecheck + eval-gate/eval-harness suites + the <code>evals/w2</code> prove-the-red self-test) + <code>install-git-hooks.sh</code> (installs <code>.git/hooks/pre-push</code>, coexists with prek's pre-commit). <b>Demonstrated to block a regression:</b> clean tree → exit 0 (push allowed); neutering the citation check → exit 1 (push blocked), reverted to green. The assignment accepts "Git Hook or equivalent." (GitLab-runner path dropped to avoid contending with the small live-demo droplet; decision recorded in <code>w2-ci-runner-plan</code>.)</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Demo video (3–5 min)</div>
+        <p class="desc">Shows document upload, extraction, evidence retrieval, citations, eval results, and observability.</p>
+        <p class="note"><b>Done (2026-07-15):</b> recorded by the physician/user.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Cost &amp; latency report</div>
+        <p class="desc">Actual dev spend, projected production cost, p50/p95 latency, and bottleneck analysis.</p>
+        <p class="note"><b>Done (2026-07-15):</b> the W2 multi-agent flow measured on Site B — <code>loadtest/results-2026-07-15-siteB/loadtest-comparison.md</code> + <code>docs/w2-slos.md</code>. p50/p95/p99 at 10 concurrent, the 50c OpenEMR FHIR-amplification bottleneck, cost ≈ $0.008–0.02/turn (model tiering: Sonnet generate, Haiku route+ground). Bottleneck <b>found + fixed</b>: Sonnet-routing → Haiku cut p95 <b>45s → 7.6s</b>, beating the W1 baseline. <b>Foundation:</b> <code>docs/cost-analysis.md</code> + W1 load test.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Deployed application</div>
+        <p class="desc">Publicly accessible deployed app with the Week 2 core flow working.</p>
+        <p class="note"><b>Deployed + full W2 flow VERIFIED live (2026-07-15).</b> Staging <code>https://<copilot-host-b></code> runs the complete W2 flow, each part verified end-to-end: chat with <b>guideline RAG</b> (Cohere on — a "what A1c target" question returns a cited guideline passage), <b>document ingestion</b> (lab PDF → VLM extract → OCR box-match → review → commit through the real write path), and the <b>in-chat source viewer</b> (guideline passage + document screenshot with the cited value's bounding box). <code>/ready</code> all-green (redis/openemr/langfuse/anthropic/cohere); W2 routes registered; the OAuth client carries the W2 <code>DocumentReference.read</code>+<code>Binary.read</code> scopes. <b>Demo video recorded.</b> Blue/green: the other droplet is the frozen graded build; roles swap per cycle; both deploy from <code>main</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ENGINEERING REQUIREMENTS (counted) ============ -->
+  <section class="group">
+    <h2>Engineering Requirements <span class="count">graded alongside the core submission — not optional</span></h2>
+    <p class="sub">Mostly "extend the Week 1 capability to cover Week 2 flows." Amber = the Week 1 mechanism exists and just needs to reach the (not-yet-built) Week 2 components.</p>
+    <div class="grid">
+      <div class="req" data-status="green">
+        <div class="title">Typed contracts, schema evolution, data authority</div>
+        <p class="desc">Every W2 interface (ingestion, RAG, handoffs, FHIR writes) has a typed contract. Schema changes from W1 carry a migration note. One source of truth per data type; no silent overwrites.</p>
+        <p class="note"><b>Done:</b> <code>W2_ARCHITECTURE.md §12.1</code> — a schema-evolution table for every new W2 contract (<code>LabPdf/IntakeForm</code> extraction, <code>Citation/BoundingBox</code>, <code>GuidelineChunk/EvidenceSnippet</code>, supervisor <code>RouteDecision</code>, the derived <code>form_observation</code> write) showing each is <b>additive, Zod-first, no W1 breakage</b>, with the migration posture (no destructive migration, no backfill) + the one-forward-compat note. Data-authority rule (one source of truth, no silent overwrite) in §12. All contracts are committed Zod schemas.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Canonical schema contracts (no VLM bypass)</div>
+        <p class="desc">The extraction schemas (<code>lab_pdf</code>, <code>intake_form</code>) are the canonical contracts. Raw VLM output must never bypass schema validation.</p>
+        <p class="note"><b>Done:</b> raw VLM output is <code>safeParse</code>d against the canonical Zod schema in <code>@copilot/ingestion</code> (bounded retry-with-feedback then typed <code>degraded</code>, never a silent pass); the Claude-vision adapter never bypasses it; enforced by the <code>w2-document-ingestion-writes</code> rule + unit tests.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">SLOs, timeouts, retries, circuit breakers</div>
+        <p class="desc">Extend observability to W2 flows (ingestion latency, extraction confidence, RAG hit rate, routing decisions, per-worker latency). SLOs for ingestion p95 &amp; retrieval. Timeouts + retry on all outbound LLM/retrieval calls.</p>
+        <p class="note"><b>Foundation:</b> metrics + a bounded regenerate-with-feedback retry (Week 1). <b>Done (2026-07-15):</b> the W2 <b>observability</b> half — ingestion extract-to-draft p50/p95, retrieval hit rate + latency, rerank used-vs-degraded, per-worker routing/latency signals — all recorded + on the dashboard (see req 7). <b>Formal SLOs + timeouts documented + validated</b> in <code>docs/w2-slos.md</code>: p95 &lt; 10s chart-Q&amp;A (measured 7.6s), the OpenEMR probe timeout, and the full graceful-degradation ladder (rerank → fused order; <code>/ready</code> degraded; grounding → labeled partial; typed tool failures). <b>Circuit breaker IMPLEMENTED (2026-07-15):</b> the Cohere reranker is wrapped in a breaker (<code>apps/agent/src/cohere/circuitBreaker.ts</code>, wired in <code>wire.ts</code>) — 3 consecutive failures → open 30s → fail fast to the fused order (half-opens after cooldown; 6 unit tests). Valuable now that RAG runs on a rate-limited trial key. All four — SLOs, timeouts, retries, circuit breaker — now present.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Correlation ID across service boundaries</div>
+        <p class="desc">The W1 correlation ID propagates into W2 ingestion, worker handoffs, VLM/retrieval calls, and FHIR writes. A full multi-agent trace is reconstructable from the correlation ID alone.</p>
+        <p class="note"><b>Foundation:</b> correlation ID wired end-to-end (Week 1). <b>Done (2026-07-15):</b> the correlation id is threaded from the verified session token into the ingestion service (<code>detectAndIngest(pid, {correlationId, logger})</code>) and into the LangGraph state (new <code>correlationId</code> channel, set by <code>/chat</code>), so every W2 structured event (<code>ingestion.complete</code>, <code>extraction.field</code>, <code>worker.handoff</code>, <code>retrieval.hit/miss</code>) carries it. It is deliberately kept OUT of the metrics snapshot (PHI-free). Langfuse trace is already keyed by it.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Structured, searchable logs (W2 events)</div>
+        <p class="desc">Extend the log schema to W2 events (ingestion start/complete, extraction outcome per field, retrieval hit/miss, worker handoff, eval run). Searchable by case/event/correlation ID. PHI-free. No parallel logging convention.</p>
+        <p class="note"><b>Foundation:</b> pino structured logs (Week 1). <b>Done (2026-07-15):</b> named pino events emitted at the real points — <code>ingestion.complete</code> + <code>extraction.field</code> (ingestion service), <code>worker.handoff</code> (supervisor node), <code>retrieval.hit</code>/<code>retrieval.miss</code> (evidence-retriever node) — all correlation-id-tagged, object-context only (no string interpolation), PHI-free (no titles/values, asserted in tests). Vocabulary documented in <code>docs/specs/w2-observability.md §6</code>; same pino convention as W1, no parallel channel.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Dashboards (W2 metrics)</div>
+        <p class="desc">Add to the W1 dashboard: document ingestion count, extraction field-level pass rate, retrieval hit rate, worker routing decisions, eval pass/fail per category, queue depth, retries, decision outcomes.</p>
+        <p class="note"><b>Foundation:</b> <code>GET /dashboard</code> + metrics registry (Week 1). <b>Done (2026-07-15):</b> three W2 dashboard sections — Document ingestion (count, ok/degraded per type, located rate, extract p50/p95, queue-depth N/A), Guideline retrieval (queries, snippets, zero-hit, rerank used/degraded, retrieval p50/p95), Supervisor routing (turns routed, hop-cap hits, decisions per target). Machine <code>GET /metrics</code> returns the whole snapshot. PHI-free (asserted).</p>
+      </div>
+      <div class="req" data-status="amber">
+        <div class="title">CI pipeline (lint, typecheck, tests, coverage, audit, security scan)</div>
+        <p class="desc">Extend the eval gate: schema validation tests, supervisor-worker contract tests, extraction regression tests in the PR-blocking suite. Dependency audit + security scan on every PR.</p>
+        <p class="note"><b>Started (2026-07-14):</b> the pre-push git hook (<code>scripts/eval-gate.sh</code>) runs, in order: the PHI-scan self-test → the <b>deterministic PHI static scan</b> (<code>scripts/phi-scan.mjs</code>, a security-style source check — <code>a9bb3a5</code>) → the full <code>pnpm -r test</code> suite → the 50-case golden eval gate with its prove-the-red self-test (offline/keyless), blocking a regressing push (see <em>CI evidence</em>). The <code>pnpm -r test</code> run includes the <b>OpenAPI contract test</b> (spec ⊇ actually-registered routes, introspected — <code>27db752</code>, hardened 2026-07-17). <b>Correction (2026-07-17):</b> the hook does <em>not</em> run <code>tsc</code> typecheck as a distinct step (prior note overstated this — vitest transpiles without type-checking). <b>Gap:</b> still no <code>tsc</code> typecheck / lint / coverage-threshold / dependency-audit steps in the hook, and no dedicated supervisor-worker contract test package (worker/graph behavior is covered by unit tests, not a contract suite).</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Testing strategy (documented)</div>
+        <p class="desc">In <code>W2_ARCHITECTURE.md</code>: what is unit-tested (validators, tools), integration-tested (ingestion, RAG), evaluated via the golden set, and not tested + why. Every test names the failure mode it guards.</p>
+        <p class="note"><b>Done (2026-07-15):</b> <code>W2_ARCHITECTURE.md §16 "Testing strategy"</code> documents each layer with the failure mode it guards — <b>unit</b> (Zod validators, box-matching, RAG chunk/RRF/rerank, supervisor reducer), <b>integration</b> (fixtures + stubs, CI-portable, ingest→answer + supervisor↔worker contract + FHIR idempotency), <b>eval golden set</b> (50-case behavioral), and an explicit <b>"not tested (and why)"</b> (live model quality, real-scan OCR accuracy — mitigated by human-in-the-loop review). Committed with the corrected-to-reality doc (<code>d7d5637</code>).</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Observability, debugging &amp; incident response</div>
+        <p class="desc">Document W2 failure modes (ingestion failures, extraction schema violations, RAG no-results, routing errors) — how to spot each in logs and the recovery action.</p>
+        <p class="note"><b>Foundation:</b> on-call runbook <code>docs/oncall.md</code> (Week 1). <b>Done (2026-07-15):</b> <code>docs/oncall.md</code> carries the W2 failure-mode table (ingestion failure, schema violation, value-not-on-page, RAG no-results, reranker down, VLM timeout, supervisor routing error, evidence unavailable, PHI-leak) each with how-to-spot + recovery, plus the three live W2 alert responses (<code>extraction_failure_rate</code>, <code>rag_retrieval_latency_p95</code>, <code>supervisor_hop_cap_rate</code>) and the updated where-to-look table (<code>/ready</code> three-state, worker-under-supervisor spans, the W2 log-event vocabulary).</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Runnable API collection (W2 endpoints)</div>
+        <p class="desc">Update the Postman/Bruno collection with W2 endpoints: document upload, extraction status, evidence retrieval, and the full W2 agent flow.</p>
+        <p class="note"><b>Done (2026-07-15, <code>e654097</code>):</b> the Postman collection (<code>api/copilot.postman_collection.json</code>) + the newman smoke now include the W2 document routes — <b>GET /documents/status</b>, <b>POST /documents/pending</b> (review drafts), and <b>POST /documents/extract</b> (with the token-confinement negative case: a user token → 403). <code>api/README.md</code> documents them. Evidence retrieval is exercised through the <code>POST /chat</code> flow (a guideline question routes to the evidence-retriever). Verified: 3 W2 document items present in the collection.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Baseline CPU / memory / latency / throughput</div>
+        <p class="desc">Record baselines for W2 flows (ingestion, extraction, RAG, full multi-agent run) and compare against W1 baselines to catch regressions in shared paths.</p>
+        <p class="note"><b>Done (2026-07-15):</b> W2 multi-agent <b>latency + throughput</b> baselines captured on Site B (p50/p95/p99 + req/s at 10 concurrent, plus the 50c ceiling — <code>loadtest/results-2026-07-15-siteB/</code>) and compared against the W1 baseline, which caught + fixed the supervisor-routing regression. <b>CPU/mem captured (2026-07-15):</b> peak per-container <code>docker stats</code> during a 10c W2 load — <b>openemr 88.7% CPU</b> (the bottleneck, → the 50c wall), agent 44.8%/167 MiB, langfuse 77.8%, redis negligible (<code>loadtest/results-2026-07-15-siteB/docker-stats-during-load.txt</code> + comparison doc). <b>Foundation:</b> W1 load test.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Distributed tracing (supervisor / worker spans)</div>
+        <p class="desc">Each worker invocation is a child span of the supervisor span. Extraction &amp; retrieval sub-calls are traceable within their worker spans.</p>
+        <p class="note"><b>Foundation:</b> per-node Langfuse spans (Week 1). <b>Done (2026-07-15):</b> request-scoped parent-span helpers (<code>openParentSpan</code>/<code>endParentSpan</code>/<code>childSpan</code>) hold ONE <code>supervisor</code> span across the whole routing cycle, so <code>worker:intake_extractor</code> and <code>worker:evidence_retriever</code> are CHILD spans of it (plus a <code>supervisor:decision</code> child per hop carrying the routing rationale). The Langfuse tracer implements child spans; a recording-tracer test asserts the hierarchy (workers are not top-level siblings). <b>Follow-on:</b> nesting the embed/rerank sub-calls inside the worker span (they live in the pure <code>@copilot/rag</code> package, which must not import the tracer — done at the edge instead).</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">/health &amp; /ready validate W2 dependencies</div>
+        <p class="desc"><code>/ready</code> checks document storage, vector index, and reranker API reachability, and returns a degraded status (not binary) if any dependency is down.</p>
+        <p class="note"><b>Foundation:</b> separate <code>/health</code> + <code>/ready</code> with dep checks (Week 1). <b>Done (2026-07-15):</b> <code>ReadinessRegistry</code> gained a per-check <code>critical</code> flag and a three-state result — <code>ready</code> / <code>degraded</code> (HTTP 200; a non-critical dep down) / <code>not_ready</code> (503; a critical dep down). A non-critical <b>Cohere embed/rerank</b> readiness probe is registered when RAG is enabled, so RAG/reranker down → <code>degraded</code> (chart answers keep working) rather than the whole service failing. Redis/OpenEMR/Langfuse/Anthropic stay critical. <b>Rubric-named W2 probes wired (2026-07-18, <code>w2-alert-and-probe-naming</code>):</b> <code>/ready</code> now reports <code>document_storage</code> (OpenEMR document reachability), <code>vector_index</code> (the in-memory guideline index built at startup ⇔ the evidence retriever is wired), and <code>reranker</code> (Cohere rerank reachability — replaces the generic <code>cohere</code> name) — each their OWN non-critical probe, so a W2 dep down → <code>degraded</code>, not down.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Dashboard &amp; alert definitions (W2)</div>
+        <p class="desc">Add W2 alerts: extraction failure rate, RAG retrieval latency, eval regression (&gt;5% drop in any category). Each documented with an expected response action.</p>
+        <p class="note"><b>Foundation:</b> 4 alerts + runbook (Week 1). <b>Done (2026-07-15; completed 2026-07-18, <code>w2-alert-and-probe-naming</code>):</b> the three rubric-named W2 rules in <code>packages/metrics/src/alerts.ts</code> — <code>extraction_failure_rate</code>, <code>rag_retrieval_latency</code> (renamed from <code>_p95</code>), and now <code>eval_regression_detection</code> (the previously-missing one) — each with a runbook response in <code>docs/oncall.md</code>. <b>eval_regression_detection</b> reads a new per-category eval sub-snapshot (<code>recordEval</code> per turn from the deterministic <code>evalOutcome</code>) and fires when any category's live failure rate exceeds 5% (critical &gt;10%) — the runtime analog of the pre-push gate's &gt;5%-regression rule (the gate stays authoritative). <b><code>GET /alerts</code> now lists EVERY rule by name</b> (with status) + a <code>firing</code> subset, so each alert is discoverable regardless of state (was firing-only — why the grader "couldn't find them by name"). New <b>Eval categories</b> dashboard section (per-category pass rate). OpenAPI <code>AlertsResponse</code>/<code>AlertOutcome</code> synced. Tests: eval-regression bands + discoverable-by-name + recordEval.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">OpenAPI 3.0 / Swagger</div>
+        <p class="desc">Publish an OpenAPI 3.0 spec for all W2 HTTP endpoints, committed and kept in sync. Contract tests verify implementation matches the spec.</p>
+        <p class="note"><b>Done (2026-07-15, <code>27db752</code>; hardened 2026-07-17):</b> committed <code>apps/agent/openapi.json</code> — an OpenAPI 3.0 document for <b>every</b> agent route (<code>/chat</code>, the W2 <code>/documents/status|pending|extract</code>, <code>/labs/series</code>, <code>/metrics|/dashboard|/alerts</code>, <code>/health|/ready</code>, dev-mint, UI) with the bridge-secret/ops-token security schemes. <b>Contract test now INTROSPECTS the real route surface</b> (<code>apps/agent/test/openapi.contract.test.ts</code>): <code>buildApp</code> exposes <code>app.routeManifest</code> (populated by an <code>onRoute</code> hook at <code>ready()</code>), the test builds the app with every conditional dep stubbed, and asserts the spec is a superset of the ACTUALLY-registered routes (no phantom either) — so adding a route without documenting it fails CI. <b>Fix history:</b> the earlier version diffed against a <em>hand-maintained</em> route table which had silently drifted — <code>/labs/series</code> (the lab-trend endpoint) was registered but undocumented AND absent from the table, so the suite stayed green over a real gap. Both are now closed; <b>prove-the-red verified</b> (dropping <code>/labs/series</code> from the spec fails the superset assertion), 10-test suite green.</p>
+      </div>
+      <div class="req" data-status="amber">
+        <div class="title">Integration tests with fixtures &amp; stubs</div>
+        <p class="desc">Exercise the full ingestion-to-answer path with fixture documents (stored PDFs/form images) and stubbed LLM/VLM responses. Must pass in CI without live API access.</p>
+        <p class="note"><b>Partial:</b> the <b>ingestion pipeline</b> is integration-tested end-to-end against committed fixtures with <b>injected (stubbed) VLM + OCR ports</b> — <code>packages/ingestion/test/{intakePipeline,pipeline}.test.ts</code> drive fetch→rasterize→extract→box-match→draft (8/8 values located from the fixture; degrade + OCR-empty-forced-review + infra-propagate covered), all offline/keyless. The eval harness likewise runs the golden set on a fully <b>stubbed engine</b> in CI. <b>Gap:</b> a single dedicated <b>ingest→<em>answer</em></b> integration test that crosses the ingestion→chat seam in one suite (the strategy is documented in <code>W2_ARCHITECTURE.md §16</code>; the per-package pipeline tests + the golden-set stub cover the pieces, but not assembled as one seam-to-seam test).</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Data modeling &amp; lineage</div>
+        <p class="desc">Document the W2 data model — extracted lab observations, intake facts, guideline chunks, citation records. Each type: owner (authoritative system), lineage, access control, validation rules.</p>
+        <p class="note"><b>Done:</b> <code>W2_ARCHITECTURE.md §12</code> — a data-model table covering every W2 type (source document, extracted lab Observation, intake facts, pending-review draft, guideline chunk, derived <code>form_observation</code>, citation record) with <b>owner · lineage · access · validation</b> per row, plus the "one source of truth, no silent overwrites" data-authority rule. Verified against shipped code (write-path <code>derivedFrom</code>, Redis draft TTL, in-memory RAG).</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Privacy audit + CI PHI-detection check</div>
+        <p class="desc">Audit W2 observability data for PHI leakage — traces, logs, eval datasets, cost reports must carry no patient identifiers, raw document text, or extracted clinical values. Document scrubbing; verify in CI with a PHI-detection check.</p>
+        <p class="note"><b>Done (2026-07-15):</b> <b>audit doc</b> <code>docs/w2-privacy-audit.md</code> (<code>2d72b6d</code>) maps every PHI class to where it enters / lives / lifetime, documents minimum-necessary per model role, the single documented Cohere egress (with the offline zero-egress fallback), what stays in-boundary (in-process OCR, self-hosted Langfuse, Redis draft cache never logged), and per-surface scrubbing (no PHI interpolated into logs, URL-secret redaction, raw errors never returned, PHI-free traces/costs). <b>Two automated PHI checks in the gate:</b> (1) the deterministic <code>no_phi_in_logs</code> eval scorer (safety subset, must stay 100%) and (2) a deterministic <b>PHI static scan</b> <code>scripts/phi-scan.mjs</code> (<code>a9bb3a5</code>) that fails the push if any structured-logger call interpolates a variable into its message — both run offline in <code>eval-gate.sh</code> (pre-push hook). <b>Verified:</b> <code>phi-scan --self-test</code> catches the antipattern and the repo scan passes clean.</p>
+      </div>
+      <div class="req" data-status="green">
+        <div class="title">Backup &amp; recovery plan</div>
+        <p class="desc">How extracted docs, derived FHIR records, and the eval golden set are backed up; manual recovery procedure; RPO/RTO estimates. The golden set must be reproducible from the repo alone.</p>
+        <p class="note"><b>Done:</b> <code>W2_ARCHITECTURE.md §13</code> — per-artifact backup ownership + <b>RPO/RTO</b> estimates. The agent is <b>stateless by design</b>: golden set + corpus committed to the repo (RPO 0, RTO minutes), RAG index rebuilt on boot, Redis drafts transient (loss = re-extract, no chart data lost), derived FHIR records covered by OpenEMR's MariaDB backup. Golden set reproducible from the repo alone (evals/w2 + fixtures committed). No agent DB → no pg_dump needed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PITFALLS ============ -->
+  <section class="group">
+    <h2>Common Pitfalls &amp; Watch-Outs <span class="count">from the PDF — not scored</span></h2>
+    <ul class="pitfalls">
+      <li>Trying to support five document types before two work reliably.</li>
+      <li>Using a VLM answer directly without schema validation or source metadata.</li>
+      <li>Letting the supervisor become a black box — handoffs must be logged and explainable.</li>
+      <li>Using LLM-as-a-judge without a clear rubric. Use boolean rubrics so failures are actionable.</li>
+      <li>Logging raw document text, patient identifiers, or screenshots to SaaS observability tools.</li>
+      <li><b>Final note:</b> Week 2 is not a contest to integrate the most AI frameworks — the best submissions feel narrower than the spec and stronger for it.</li>
+    </ul>
+  </section>
+
+  <footer class="page">
+    <h3>How this page is maintained</h3>
+    <p>This file is the Week 2 requirements board. As features land, update the corresponding card's
+      <code>data-status</code> attribute (<code>red</code> → <code>amber</code> → <code>green</code>) and refresh its
+      <code>&lt;p class="note"&gt;</code>. The header totals and progress bar recompute automatically from the
+      <code>data-status</code> values, so no counter needs hand-editing. Bump the <code>Last updated</code> date
+      (edit the <code>#updated</code> text). Overview/roadmap cards carry <code>data-count="false"</code> and are excluded from the totals.</p>
+    <p>Week 1's board remains <code>docs/week1-requirements.md</code>; this page is the Week 2 companion. Keep both honest —
+      green means done <em>and verified on disk / live</em>, not "code exists somewhere."</p>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var reqs = Array.prototype.slice.call(document.querySelectorAll('.req'))
+      .filter(function (el) { return el.getAttribute('data-count') !== 'false'; });
+    var g = 0, a = 0, r = 0;
+    reqs.forEach(function (el) {
+      var s = el.getAttribute('data-status');
+      if (s === 'green') g++; else if (s === 'amber') a++; else r++;
+      // stamp a pill onto every scored card
+      var pill = document.createElement('span');
+      pill.className = 'pill ' + s;
+      pill.textContent = s === 'green' ? 'Done' : s === 'amber' ? 'In progress' : 'To do';
+      el.appendChild(pill);
+    });
+    // also stamp pills on the non-counted overview/roadmap cards
+    Array.prototype.slice.call(document.querySelectorAll('.req[data-count="false"]')).forEach(function (el) {
+      var s = el.getAttribute('data-status');
+      var pill = document.createElement('span');
+      pill.className = 'pill ' + s;
+      pill.textContent = s === 'green' ? 'Done' : s === 'amber' ? 'In progress' : 'To do';
+      el.appendChild(pill);
+    });
+    var total = g + a + r || 1;
+    // progress bar: green full weight, amber half weight
+    var pct = Math.round(((g + a * 0.5) / total) * 100);
+    document.getElementById('pctDone').textContent = pct + '%';
+    document.getElementById('counts').textContent = g + ' / ' + a + ' / ' + r;
+    var bar = document.getElementById('overallBar');
+    function seg(cls, n) { if (!n) return; var i = document.createElement('i'); i.className = cls; i.style.flex = n; bar.appendChild(i); }
+    seg('g', g); seg('a', a); seg('r', r);
+  })();
+</script>
+</body>
+</html>

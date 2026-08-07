@@ -1,0 +1,22 @@
+# Caddy provisions a Let's Encrypt cert for each hostname (via the ACME HTTP-01
+# challenge on port 80) and serves HTTPS on 443. sslip.io resolves the prefixed
+# subdomains (copilot.*, langfuse.*) to the same droplet IP, so each gets its own cert.
+
+# OpenEMR (the EMR itself).
+{$SITE_ADDRESS} {
+	reverse_proxy https://openemr:443 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}
+
+# Clinical Co-Pilot agent (dev chat page + /chat + /health + /ready).
+copilot.{$SITE_ADDRESS} {
+	reverse_proxy agent:3000
+}
+
+# Self-hosted Langfuse observability UI (login-protected).
+langfuse.{$SITE_ADDRESS} {
+	reverse_proxy langfuse:3000
+}

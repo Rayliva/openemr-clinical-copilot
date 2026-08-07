@@ -1,0 +1,53 @@
+{
+  "target": "https://copilot.203-0-113-10.sslip.io/chat",
+  "runIso": "2026-07-12-siteA",
+  "grounding": "on (prod config: Sonnet generation + Haiku grounding judge per claim)",
+  "patientsRotated": 6,
+  "questionMix": [
+    "Who is this patient? Give name and date of birth.",
+    "What medications is she on?",
+    "Does she have any allergies?",
+    "Anything else I should know before her visit?"
+  ],
+  "reqTimeoutMs": 120000,
+  "levels": [
+    {
+      "concurrency": 10,
+      "requests": 100,
+      "successes": 100,
+      "failures": 0,
+      "errorRatePct": 0,
+      "errorBreakdown": {},
+      "wallSeconds": 120.9,
+      "throughputRps": 0.83,
+      "latencyMs": {
+        "p50": 7807,
+        "p95": 28824,
+        "p99": 32245,
+        "min": 3894,
+        "max": 35037,
+        "mean": 11277
+      },
+      "note": "latency percentiles computed over SUCCESSFUL requests only; error rate captures the rest"
+    },
+    {
+      "concurrency": 50,
+      "requests": 100,
+      "successes": 100,
+      "failures": 0,
+      "errorRatePct": 0,
+      "errorBreakdown": {},
+      "wallSeconds": 69.2,
+      "throughputRps": 1.45,
+      "latencyMs": {
+        "p50": 20662,
+        "p95": 48586,
+        "p99": 59097,
+        "min": 5994,
+        "max": 63628,
+        "mean": 24146
+      },
+      "note": "latency percentiles computed over SUCCESSFUL requests only; error rate captures the rest"
+    }
+  ]
+}
